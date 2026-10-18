@@ -102,7 +102,7 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-[#063a2a]/30 px-6 py-8 font-mono text-xs uppercase tracking-[0.15em] md:px-12">
-        © {new Date().getFullYear()} Giang
+        © 2026 Giang
       </footer>
     </main>
   );
