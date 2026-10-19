@@ -208,15 +208,29 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Tiêu đề */}
+        {/* Tiêu đề và hai nút dẫn xuống section phía dưới */}
         <div className="absolute left-[2.4%] w-[52%]" style={{ bottom: "4vh" }}>
-          <h1 className="text-[2vw] leading-[1.3] tracking-tight">
-            “The GAO report criticizes agencies for not clearly communicating the
-            goals of IPM,” said Jepson. “Our challenge is to greatly improve the
-            communication to and from growers, to learn what works and what
-            doesn’t. the work coming from OSU researchers must be adopted in the
-            field and not simply languish in scientific journals.”
+          <h1 className="text-[2vw] leading-[1.8] tracking-tight">
+            Tuy có xuất phát điểm là một đứa trẻ ít nói, hành trình đạt
+            <span className="font-bold text-red-500"> 8.5</span> trong kì thi{" "}
+            <span className="font-bold text-red-500">IELTS</span> của mình lại
+            không quá gian nan.
           </h1>
+
+          <div className="mt-8 flex flex-wrap gap-4">
+            <a
+              href="#score-75"
+              className="inline-flex min-w-[180px] items-center justify-center rounded-full border-2 border-[#1a1a1a] bg-white px-12 py-4 text-lg font-bold text-[#1a1a1a] transition-colors hover:bg-[#1a1a1a]/5"
+            >
+              7.5
+            </a>
+            <a
+              href="#score-85"
+              className="inline-flex min-w-[180px] items-center justify-center rounded-full border-2 border-[#1a1a1a] bg-[#1a1a1a] px-12 py-4 text-lg font-bold text-white transition-opacity hover:opacity-90"
+            >
+              8.5
+            </a>
+          </div>
         </div>
 
         {/* Chữ lăn chuột: nằm bên trái ảnh */}
