@@ -19,7 +19,6 @@ const PLACE_COLORS: Record<string, string> = {
 };
 
 // Dữ liệu 4 lần thi (thẻ đầu tiên là lần gần nhất, sẽ nằm ở giữa)
-// highlight: true để tô đỏ điểm của kỹ năng đó
 const EXAMS: Exam[] = [
   {
     date: "27/05/2026",
@@ -70,16 +69,29 @@ const EXAMS: Exam[] = [
 
 const GAP = 24; // khoảng cách giữa các thẻ (px)
 const SPACING = 1.0; // khoảng cách carousel đi theo tỉ lệ: 1.0 = 100%, 0.95 = 95%
-const DRAG_SENSITIVITY = 2.5; // kéo chuột: số lần lớn hơn = chỉ cần kéo ngắn đã chuyển thẻ (1 = bình thường)
+const DRAG_SENSITIVITY = 2.5; // kéo chuột: số lớn hơn = kéo ngắn đã chuyển thẻ (1 = bình thường)
 const WHEEL_SENSITIVITY = 2.0; // lăn chuột ngang: tương tự như trên (1 = bình thường)
 const DRAG_RESPONSE = 1.5; // độ bám khi đang kéo (càng lớn càng sát tay)
 const SNAP_RESPONSE = 3; // độ êm khi thẻ tự trượt về vị trí (càng nhỏ càng chậm và êm)
 const WHEEL_SETTLE_MS = 160; // sau khi ngừng lăn ngang, thẻ tự căn vào giữa
-const SIDE_FADE = 0.15; // độ mờ của thẻ hai bên (0 = không mờ, 1 = mờ hết)
-const SIDE_BLUR = 3; // độ nhòe tối đa của thẻ hai bên (px)
 const SIDE_SCALE = 0.86; // thẻ hai bên nhỏ hơn một chút
+const SIDE_VEIL = 0.6; // độ mờ của thẻ hai bên (0 = không mờ, 1 = mờ hết)
 const YAW_DEG = -10; // góc xoay tối đa của thẻ hai bên (độ)
 const PERSPECTIVE = 900; // độ sâu phối cảnh (px)
+const EPS = 0.0005; // ngưỡng coi như đã đứng yên
+
+// Animation xuất hiện khi scroll tới (chỉ chạy một lần)
+const ENTER_MS = 2500; // thời gian animation (ms)
+const ENTER_OFFSET_Y = 120; // thẻ giữa trồi từ dưới lên (px)
+const ENTER_OFFSET_X = 150; // thẻ hai bên pan từ ngoài vào (px)
+const ENTER_CSS = `
+.ix-enter{opacity:0;transition:opacity ${ENTER_MS * 0.8}ms cubic-bezier(.22,1,.36,1),transform ${ENTER_MS}ms cubic-bezier(.22,1,.36,1)}
+.ix-rise{transform:translate3d(0,${ENTER_OFFSET_Y}px,0)}
+.ix-left{transform:translate3d(-${ENTER_OFFSET_X}px,0,0)}
+.ix-right{transform:translate3d(${ENTER_OFFSET_X}px,0,0)}
+.ix-in .ix-enter{opacity:1;transform:translate3d(0,0,0)}
+@media (prefers-reduced-motion: reduce){.ix-enter{transition:none}}
+`;
 
 // Đưa khoảng cách về khoảng ngắn nhất trên vòng tròn, trong (-n/2, n/2]
 const wrapDistance = (d: number, n: number) => {
@@ -92,12 +104,10 @@ function ExamCard({ exam }: { exam: Exam }) {
   const placeColor = PLACE_COLORS[exam.place] ?? "text-[#1a1a1a]";
 
   return (
-    <div className="w-full overflow-hidden rounded-2xl border border-[#1a1a1a]/15 bg-white shadow-[0_20px_60px_-25px_rgba(0,0,0,0.15)]">
+    <div className="w-full overflow-hidden rounded-2xl border border-[#1a1a1a]/15 bg-white shadow-[0_12px_30px_-18px_rgba(0,0,0,0.15)]">
       {/* Đầu thẻ: điểm tổng bên trái, ngày và nơi thi bên phải */}
       <div className="flex items-end justify-between gap-6 border-b border-[#1a1a1a]/10 px-6 pb-5 pt-6">
-        <h3 className="text-2xl font-semibold text-[#d62828]">
-          Overall {exam.overall}
-        </h3>
+        <h3 className="text-2xl font-semibold text-[#d62828]">Overall {exam.overall}</h3>
 
         <div className="flex flex-col items-end gap-2 text-right">
           {exam.latest && (
@@ -106,8 +116,7 @@ function ExamCard({ exam }: { exam: Exam }) {
             </span>
           )}
           <p className="font-mono text-sm text-[#6b6b6b]">
-            {exam.date} ·{" "}
-            <span className={`font-bold ${placeColor}`}>{exam.place}</span>
+            {exam.date} · <span className={`font-bold ${placeColor}`}>{exam.place}</span>
           </p>
         </div>
       </div>
@@ -125,11 +134,7 @@ function ExamCard({ exam }: { exam: Exam }) {
           className="flex items-center justify-between border-b border-[#1a1a1a]/10 px-6 py-5 last:border-b-0"
         >
           <span className="text-base">{skill.name}</span>
-          <span
-            className={`text-xl font-medium ${
-              skill.highlight ? "text-[#d62828]" : "text-[#1a1a1a]"
-            }`}
-          >
+          <span className={`text-xl font-medium ${skill.highlight ? "text-[#d62828]" : "text-[#1a1a1a]"}`}>
             {skill.score}
           </span>
         </div>
@@ -141,18 +146,22 @@ function ExamCard({ exam }: { exam: Exam }) {
 export default function IeltsOverview() {
   const trackRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const veilRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
 
     const cards = cardRefs.current;
+    const veils = veilRefs.current;
     const n = EXAMS.length;
 
-    let target = 0; // vị trí đích (đơn vị: số thẻ), 0 = thẻ đầu ở giữa
-    let shown = 0; // vị trí đang hiển thị, bám theo target mượt mà
+    let target = 0; // vị trí đích (đơn vị: số thẻ)
+    let shown = 0; // vị trí đang hiển thị
     let last = performance.now();
     let frame = 0;
+    let running = false;
+    const lastStyle: string[] = new Array(n).fill("");
 
     let dragging = false;
     let moved = false;
@@ -160,11 +169,20 @@ export default function IeltsOverview() {
     let startPos = 0;
     let wheelTimer = 0;
 
-    // Khoảng cách 1 thẻ (px) trên màn hình, đã tính SPACING
     const getStep = () => ((cards[0]?.offsetWidth ?? 400) + GAP) * SPACING;
+
+    // Chỉ bật vòng lặp khi có chuyển động, không chạy liên tục khi đứng yên
+    const kick = () => {
+      if (!running) {
+        running = true;
+        last = performance.now();
+        frame = requestAnimationFrame(render);
+      }
+    };
 
     const snapToNearest = () => {
       target = Math.round(target);
+      kick();
     };
 
     const onDown = (e: PointerEvent) => {
@@ -174,6 +192,7 @@ export default function IeltsOverview() {
       startX = e.clientX;
       startPos = target;
       track.style.cursor = "grabbing";
+      kick();
     };
 
     const onMove = (e: PointerEvent) => {
@@ -181,6 +200,7 @@ export default function IeltsOverview() {
       const dx = e.clientX - startX;
       if (Math.abs(dx) > 5) moved = true;
       target = startPos - (dx * DRAG_SENSITIVITY) / getStep();
+      kick();
     };
 
     const onUp = () => {
@@ -200,6 +220,7 @@ export default function IeltsOverview() {
       target += (delta * WHEEL_SENSITIVITY) / getStep();
       window.clearTimeout(wheelTimer);
       wheelTimer = window.setTimeout(snapToNearest, WHEEL_SETTLE_MS);
+      kick();
     };
 
     // Chặn click nhầm sau khi kéo; bấm vào thẻ hai bên sẽ đưa thẻ đó vào giữa
@@ -218,6 +239,7 @@ export default function IeltsOverview() {
         e.preventDefault();
         e.stopPropagation();
         target = Math.round(shown + d);
+        kick();
       }
     };
 
@@ -227,36 +249,60 @@ export default function IeltsOverview() {
 
       const k = dragging ? DRAG_RESPONSE : SNAP_RESPONSE;
       shown += (target - shown) * (1 - Math.exp(-k * dt));
-      if (Math.abs(target - shown) < 0.0005) shown = target;
+      if (Math.abs(target - shown) < EPS) shown = target;
 
       cards.forEach((el, i) => {
         if (!el) return;
         const d = wrapDistance(i - shown, n);
-        const a = Math.min(Math.abs(d), 1); // 0 ở giữa, 1 ở hai bên
+        const a = Math.min(Math.abs(d), 1);
         const scale = SIDE_SCALE + (1 - SIDE_SCALE) * (1 - a);
-        const opacity = 1 - SIDE_FADE * a;
-        const blur = a * SIDE_BLUR;
+        const veil = a * SIDE_VEIL;
         const yaw = -Math.max(-1, Math.min(1, d)) * YAW_DEG;
         const visible = Math.abs(d) < 1.5;
+        const z = Math.round(100 - a * 50);
 
-        el.style.transform = `translate3d(calc(${d.toFixed(4)} * (var(--cw) + ${GAP}px) * ${SPACING}), 0, 0) rotateY(${yaw.toFixed(3)}deg) scale(${scale.toFixed(4)})`;
-        el.style.opacity = visible ? opacity.toFixed(4) : "0";
-        el.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "none";
-        el.style.pointerEvents = visible ? "auto" : "none";
-        el.style.zIndex = String(Math.round(100 - a * 50));
+        const transform = `translate3d(calc(${d.toFixed(4)} * (var(--cw) + ${GAP}px) * ${SPACING}), 0, 0) rotateY(${yaw.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
+        const key = `${transform}|${veil.toFixed(3)}|${visible}|${z}`;
+
+        if (key !== lastStyle[i]) {
+          lastStyle[i] = key;
+          el.style.transform = transform;
+          el.style.opacity = visible ? "1" : "0";
+          el.style.pointerEvents = visible ? "auto" : "none";
+          el.style.zIndex = String(z);
+          if (veils[i]) veils[i]!.style.opacity = veil.toFixed(3);
+        }
       });
 
+      const settled = !dragging && Math.abs(target - shown) < EPS;
+      if (settled) {
+        running = false;
+        return;
+      }
       frame = requestAnimationFrame(render);
     };
+
+    // Khi carousel đi vào khung nhìn, bật animation xuất hiện (một lần duy nhất)
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          track.classList.add("ix-in");
+          io.disconnect();
+        }
+      },
+      { threshold: 0.25 }
+    );
+    io.observe(track);
 
     track.addEventListener("pointerdown", onDown);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     track.addEventListener("wheel", onWheel, { passive: false });
     track.addEventListener("click", onClick, true);
-    frame = requestAnimationFrame(render);
+    kick();
 
     return () => {
+      io.disconnect();
       cancelAnimationFrame(frame);
       window.clearTimeout(wheelTimer);
       track.removeEventListener("pointerdown", onDown);
@@ -269,34 +315,45 @@ export default function IeltsOverview() {
 
   return (
     <section id="overview" className="overflow-hidden bg-white py-16 text-[#1a1a1a]">
-      {/* Các thẻ nằm chồng trong cùng một ô lưới, nên khung tự cao theo thẻ */}
+      <style>{ENTER_CSS}</style>
+
       <div
         ref={trackRef}
         className="mx-auto grid w-full cursor-grab select-none place-items-center"
-        style={
-          {
-            "--cw": "min(560px, 85vw)",
-            perspective: `${PERSPECTIVE}px`,
-          } as CSSProperties
-        }
+        style={{ "--cw": "min(560px, 85vw)", perspective: `${PERSPECTIVE}px` } as CSSProperties}
       >
-        {EXAMS.map((exam, i) => (
-          <div
-            key={`${exam.date}-${i}`}
-            data-idx={i}
-            ref={(el) => {
-              cardRefs.current[i] = el;
-            }}
-            className="will-change-transform"
-            style={{
-              gridArea: "1 / 1",
-              width: "var(--cw)",
-              transformOrigin: "center center",
-            }}
-          >
-            <ExamCard exam={exam} />
-          </div>
-        ))}
+        {EXAMS.map((exam, i) => {
+          // Thẻ giữa trồi lên; thẻ bên trái pan từ trái; thẻ bên phải pan từ phải
+          const dir = i === 0 ? "ix-rise" : wrapDistance(i, EXAMS.length) > 0 ? "ix-right" : "ix-left";
+          const delay = i === 0 ? "0.15s" : "0s";
+
+          return (
+            <div
+              key={`${exam.date}-${i}`}
+              data-idx={i}
+              ref={(el) => {
+                cardRefs.current[i] = el;
+              }}
+              style={{
+                gridArea: "1 / 1",
+                width: "var(--cw)",
+                transformOrigin: "center center",
+              }}
+            >
+              <div className={`ix-enter relative ${dir}`} style={{ transitionDelay: delay }}>
+                <ExamCard exam={exam} />
+                {/* Lớp trắng phủ: chỉ đổi opacity, rẻ hơn nhiều so với blur */}
+                <div
+                  ref={(el) => {
+                    veilRefs.current[i] = el;
+                  }}
+                  className="pointer-events-none absolute inset-0 rounded-2xl bg-white"
+                  style={{ opacity: 0 }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

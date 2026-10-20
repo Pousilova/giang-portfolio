@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 
 // ===== Cấu hình hiệu ứng =====
-const BG_MOVE = 0.001; // nền trôi theo cuộn (tỉ lệ theo chiều cao màn hình)
-const FG_MOVE = 0.001; // tiền cảnh trôi theo cuộn, ngược chiều nền
+const BG_MOVE = 0.022; // nền trôi theo cuộn (tỉ lệ theo chiều cao màn hình)
+const FG_MOVE = 0.022; // tiền cảnh trôi theo cuộn, ngược chiều nền
 const MOUSE_BG = 5; // nền lệch theo chuột (px, tối đa)
 const MOUSE_FG = 3; // tiền cảnh lệch theo chuột (px, tối đa)
 const SMOOTH = 0.1; // độ mượt cuộn (0.05 = rất êm, 0.2 = bám sát hơn)
@@ -147,7 +147,7 @@ export default function ParallaxSection() {
           ref={fgRef}
           src="/images/parallax-fg.png"
           alt="Tác phẩm"
-          className="pointer-events-none absolute z-20 hidden will-change-transform md:block md:left-[14%] md:top-[40%] md:w-[70%] md:max-w-none"
+          className="pointer-events-none absolute z-20 hidden will-change-transform md:block md:left-[-20%] md:top-[13%] md:w-[110%] md:max-w-none"
         />
       </div>
     </section>

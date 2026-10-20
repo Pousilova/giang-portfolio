@@ -28,7 +28,7 @@ const HERO_TEXT = [
   { text: " 8.5", className: "font-bold text-red-500" },
   { text: " trong kì thi " },
   { text: "IELTS", className: "font-bold text-red-500" },
-  { text: " của mình lại không quá gian nan." },
+  { text: " của mình lại không quá vất vả." },
 ];
 
 // ===== Icon mạng xã hội =====
