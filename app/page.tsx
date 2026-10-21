@@ -1,6 +1,7 @@
 import Hero from "./components/Hero";
 import IeltsOverview from "./components/IeltsOverview";
-import ParallaxSection from "./components/ParallaxSection";
+import TransitionStory from "./components/TransitionStory";
+import LearningSection from "./components/LearningSection";
 import SmoothScroll from "./components/SmoothScroll";
 
 const SERVICES = [
@@ -17,7 +18,9 @@ export default function Home() {
 
         <IeltsOverview />
 
-        <ParallaxSection />
+        <TransitionStory />
+
+        <LearningSection />
 
         <section id="score-85" className="border-t border-[#1a1a1a]/20 px-6 py-24 md:px-12">
           <h2 className="font-serif text-5xl italic md:text-6xl">Cách mình đạt 8.5</h2>
