@@ -65,7 +65,7 @@ const INDICATOR_LEFT = "2.5vw";
 const INDICATOR_H = "26vh";
 
 // ===== Cuộn =====
-const STEP_VH = 140; // quãng cuộn cho mỗi nội dung (vh), lớn hơn = chuyển chậm và ít nhảy hơn
+const STEP_VH = 115; // quãng cuộn cho mỗi nội dung (vh), lớn hơn = chuyển chậm và ít nhảy hơn
 const GOTO_MS = 700; // thời lượng khi bấm vào mục bên trái (ms)
 
 // ===== Tính toán cố định =====
