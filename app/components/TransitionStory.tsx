@@ -60,19 +60,21 @@ const TRANS_RANGE = 60; // quãng cuộn chuyển cảnh (vh)
 const FADE_START = 0.25;
 const STORY_WIDTH = "60vw";
 
+// ===== Thanh tiến độ bên trái =====
+const INDICATOR_LEFT = "2.5vw";
+const INDICATOR_H = "26vh";
+
 // ===== Cuộn =====
-const STEP_MS = 700; // thời lượng mỗi lần tự cuộn (ms)
-const QUIET_MS = 140; // khoảng lặng giữa các cú lăn bước (ms)
-const EXIT_P = 0.995; // tiến độ coi như đã thoát khỏi section
+const STEP_VH = 140; // quãng cuộn cho mỗi nội dung (vh), lớn hơn = chuyển chậm và ít nhảy hơn
+const GOTO_MS = 700; // thời lượng khi bấm vào mục bên trái (ms)
 
 // ===== Tính toán cố định =====
 const N = STEPS.length;
-const TOTAL_VH = TRANS_RANGE + N * 100;
+const TOTAL_VH = TRANS_RANGE + N * STEP_VH;
 const T_END = TRANS_RANGE / TOTAL_VH;
 const COLUMN_H = "h-[min(70vh,560px)]";
 
 const clamp = (v: number, min = 0, max = 1) => Math.min(Math.max(v, min), max);
-const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 type From = "up" | "down" | "left" | "right" | "scale";
 const HIDDEN: Record<From, string> = {
@@ -113,14 +115,14 @@ function Reveal({
 }
 
 type LenisLike = {
-  scrollTo: (target: number, options: { duration: number; easing: (t: number) => number }) => void;
+  scrollTo: (
+    target: number,
+    options?: { duration?: number; easing?: (t: number) => number; immediate?: boolean }
+  ) => void;
 };
 
-// Bật/tắt việc Lenis bỏ qua sự kiện lăn trong section này
-const setLenisPrevent = (el: HTMLElement, on: boolean) => {
-  if (on) el.setAttribute("data-lenis-prevent", "");
-  else el.removeAttribute("data-lenis-prevent");
-};
+const getLenis = () => (window as unknown as { __lenis?: LenisLike }).__lenis;
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 export default function TransitionStory() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -131,69 +133,39 @@ export default function TransitionStory() {
   const lineRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLSpanElement>(null);
+  const indicatorRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
 
-  // Một bộ điều khiển duy nhất: mọi chuyển động trong story đi qua Lenis.scrollTo
-  const scroller = useRef({
-    busy: false,
-    lastWheel: 0,
-    timer: 0,
-    anim: 0,
-    targetIdx: 0,
-    to(y: number) {
-      window.clearTimeout(this.timer);
-      this.busy = true;
-      const lenis = (window as unknown as { __lenis?: LenisLike }).__lenis;
-      if (lenis) {
-        lenis.scrollTo(y, { duration: STEP_MS / 1000, easing: easeInOutCubic });
-      } else {
-        cancelAnimationFrame(this.anim);
-        const start = window.scrollY;
-        const dist = y - start;
-        const t0 = performance.now();
-        const step = (now: number) => {
-          const t = Math.min((now - t0) / STEP_MS, 1);
-          window.scrollTo(0, start + dist * easeInOutCubic(t));
-          if (t < 1) this.anim = requestAnimationFrame(step);
-        };
-        this.anim = requestAnimationFrame(step);
-      }
-      this.timer = window.setTimeout(() => {
-        this.busy = false;
-        this.lastWheel = performance.now();
-      }, STEP_MS + 60);
-    },
-  });
-
+  // Tiến độ trong các nội dung story (0 - 1), suy ra trực tiếp từ vị trí cuộn
   const progressOf = (section: HTMLElement) => {
     const r = section.getBoundingClientRect();
     const total = section.offsetHeight - window.innerHeight;
     return clamp(-r.top / total);
   };
 
-  const indexOf = (p: number) => {
-    const sp = clamp((p - T_END) / (1 - T_END));
-    return Math.min(Math.floor(sp * N), N - 1);
-  };
+  const storyProgress = (p: number) => clamp((p - T_END) / (1 - T_END));
 
+  // Vị trí cuộn ở giữa một nội dung, để bấm mục nào thì nội dung đó hiện rõ nhất
   const yForStep = (section: HTMLElement, i: number) => {
     const total = section.offsetHeight - window.innerHeight;
     const top = section.getBoundingClientRect().top + window.scrollY;
-    return top + (T_END + ((i + 0.01) / N) * (1 - T_END)) * total;
+    return top + (T_END + ((i + 0.5) / N) * (1 - T_END)) * total;
   };
 
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
-    const sc = scroller.current;
     let frame = 0;
 
+    // Chỉ đọc vị trí cuộn và cập nhật giao diện, không chặn hay tự cuộn trang
     const update = () => {
       frame = 0;
       const p = progressOf(section);
       const tp = clamp(p / T_END);
       const fade = clamp((tp - FADE_START) / (1 - FADE_START));
+      const sp = storyProgress(p);
 
       const travel = TRAVEL_VW * tp;
       if (leftRef.current) leftRef.current.style.transform = `translate3d(${-travel}vw, 0, 0)`;
@@ -207,86 +179,39 @@ export default function TransitionStory() {
 
       if (storyRef.current) storyRef.current.style.opacity = String(fade);
 
-      if (!sc.busy) {
-        const idx = indexOf(p);
-        setActive((prev) => (prev === idx ? prev : idx));
-      } else {
-        setActive((prev) => (prev === sc.targetIdx ? prev : sc.targetIdx));
-      }
+      const inStory = p > T_END && p < 0.999;
+      if (indicatorRef.current) indicatorRef.current.style.opacity = inStory ? "1" : "0";
+      if (dotRef.current) dotRef.current.style.top = `${sp * 100}%`;
+
+      const idx = Math.min(Math.floor(sp * N), N - 1);
+      setActive((prev) => (prev === idx ? prev : idx));
     };
 
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
 
-    const onWheel = (e: WheelEvent) => {
-      // Lăn ngang: để trình duyệt xử lý
-      if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
-
-      const r = section.getBoundingClientRect();
-      const pinned = r.top <= 0 && r.bottom >= window.innerHeight;
-      const p = progressOf(section);
-      const dir = e.deltaY > 0 ? 1 : -1;
-
-      // Chuyển cảnh, đã thoát xuống, hoặc ngoài vùng ghim: Lenis cuộn bình thường
-      if (!pinned || p <= T_END || (p >= EXIT_P && dir > 0)) {
-        setLenisPrevent(section, false);
-        return;
-      }
-
-      // Trong story: chặn cuộn tự nhiên để một bộ điều khiển duy nhất đảm nhận
-      setLenisPrevent(section, true);
-      e.preventDefault();
-
-      if (sc.busy) return; // đang tự cuộn: nuốt hết quán tính của trackpad
-
-      const now = performance.now();
-      const gap = now - sc.lastWheel;
-      sc.lastWheel = now;
-      if (gap < QUIET_MS) return;
-
-      const current = indexOf(p);
-
-      // Bước cuối, cuộn xuống: tự cuộn tới đúng biên dưới, rồi trả quyền cho Lenis
-      if (dir > 0 && current === N - 1) {
-        sc.targetIdx = N - 1;
-        sc.to(window.scrollY + r.bottom - window.innerHeight);
-        return;
-      }
-
-      // Bước đầu, cuộn lên: tự cuộn về đầu section để quay lại phần chuyển cảnh
-      if (dir < 0 && current === 0) {
-        sc.targetIdx = 0;
-        sc.to(window.scrollY + r.top);
-        return;
-      }
-
-      const target = current + dir;
-      sc.targetIdx = target;
-      setActive(target);
-      sc.to(yForStep(section, target));
-    };
-
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
-    window.addEventListener("wheel", onWheel, { passive: false });
     return () => {
       if (frame) cancelAnimationFrame(frame);
-      cancelAnimationFrame(sc.anim);
-      window.clearTimeout(sc.timer);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
-      window.removeEventListener("wheel", onWheel);
     };
   }, []);
 
+  // Bấm mục bên trái: cuộn tới đúng nội dung đó bằng Lenis (hoặc dự phòng bằng cuộn native)
   const goTo = (i: number) => {
     const section = sectionRef.current;
     if (!section) return;
-    scroller.current.targetIdx = i;
-    setActive(i);
-    scroller.current.to(yForStep(section, i));
+    const y = yForStep(section, i);
+    const lenis = getLenis();
+    if (lenis) {
+      lenis.scrollTo(y, { duration: GOTO_MS / 1000, easing: easeInOutCubic });
+    } else {
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
   };
 
   const s1 = active === 0;
@@ -294,12 +219,47 @@ export default function TransitionStory() {
   const s3 = active === 2;
 
   return (
-    <section
-      ref={sectionRef}
-      style={{ height: `${100 + TOTAL_VH}vh` }}
-      className="relative bg-white text-[#1a1a1a]"
-    >
+    <section ref={sectionRef} style={{ height: `${100 + TOTAL_VH}vh` }} className="relative bg-white text-[#1a1a1a]">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
+        {/* ===== Thanh tiến độ bên trái: mảnh, nhạt, chỉ hiện trong story ===== */}
+        <div
+          ref={indicatorRef}
+          className="pointer-events-none absolute top-1/2 z-30 -translate-y-1/2 transition-opacity duration-500"
+          style={{ left: INDICATOR_LEFT, height: INDICATOR_H, opacity: 0 }}
+        >
+          <div className="absolute inset-y-0 left-0 w-px bg-[#1a1a1a]/10" />
+
+          {STEPS.map((_, i) => {
+            const isActive = i === active;
+            return (
+              <div
+                key={i}
+                className="absolute left-0 flex items-center gap-2"
+                style={{ top: `${((i + 0.5) / N) * 100}%`, transform: "translate(-50%, -50%)" }}
+              >
+                <span
+                  className={`h-1 w-1 rounded-full transition-colors duration-300 ${
+                    isActive ? "bg-[#d62828]" : "bg-[#1a1a1a]/25"
+                  }`}
+                />
+                <span
+                  className={`whitespace-nowrap font-mono text-[9px] tracking-[0.2em] transition-colors duration-300 ${
+                    isActive ? "text-[#1a1a1a]/70" : "text-[#1a1a1a]/30"
+                  }`}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+            );
+          })}
+
+          <div
+            ref={dotRef}
+            className="absolute left-0 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#d62828]"
+            style={{ top: "0%" }}
+          />
+        </div>
+
         <div
           ref={storyRef}
           className="absolute inset-0 flex items-center justify-center"
@@ -426,12 +386,7 @@ export default function TransitionStory() {
                   {CUE_CARD.points.map((point, i) => {
                     const st = NOTE_STYLES[i % NOTE_STYLES.length];
                     return (
-                      <Reveal
-                        key={point}
-                        show={s2}
-                        from={i % 2 === 0 ? "left" : "right"}
-                        delay={300 + i * 140}
-                      >
+                      <Reveal key={point} show={s2} from={i % 2 === 0 ? "left" : "right"} delay={300 + i * 140}>
                         <span
                           className="inline-block rounded-[10px] px-4 py-3 font-sans text-sm leading-snug text-[#1a1a1a]"
                           style={{ backgroundColor: st.bg, transform: `rotate(${st.rotate})` }}

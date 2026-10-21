@@ -1,26 +1,25 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ===== FONT TOÀN TRANG: chỉ quản lý ở app/fonts.ts, các biến dưới đây đều trỏ về đó ===== */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-app);
+  --font-serif: var(--font-app);
+  --font-mono: var(--font-app);
+  --default-font-family: var(--font-app);
+  --default-mono-font-family: var(--font-app);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Áp font cho mọi phần tử, kể cả phần tử không có class font và phần tử SVG */
+*,
+*::before,
+*::after {
+  font-family: var(--font-app), ui-sans-serif, system-ui, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Nút, ô nhập và vùng nhập phải kế thừa font, không dùng font mặc định của trình duyệt */
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
 }
