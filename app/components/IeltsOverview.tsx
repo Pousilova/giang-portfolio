@@ -17,7 +17,7 @@ const RESPECT_REDUCED_MOTION = false; // true: nếu macOS bật "Giảm chuyể
 
 const PLACE_COLORS: Record<string, string> = {
   IDP: "text-[#d62828]",
-  "British Council": "text-[#1d4ed8]",
+  "BC": "text-[#1d4ed8]",
 };
 
 const EXAMS: Exam[] = [
@@ -46,7 +46,7 @@ const EXAMS: Exam[] = [
   },
   {
     date: "10/11/2025",
-    place: "British Council",
+    place: "BC",
     overall: "7.5",
     skills: [
       { name: "Listening", score: "8.0" },
@@ -57,7 +57,7 @@ const EXAMS: Exam[] = [
   },
   {
     date: "xx/xx/2023",
-    place: "British Council",
+    place: "BC",
     overall: "7.5",
     skills: [
       { name: "Listening", score: "8.5" },

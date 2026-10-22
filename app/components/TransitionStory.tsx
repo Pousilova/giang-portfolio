@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import ScrollBee from "./ScrollBee";
 
 // ===== Nội dung các mục story (thay bằng nội dung thật) =====
 const STEPS = [
@@ -52,17 +53,24 @@ const NOTE_STYLES = [
 const LEFT_LABEL = "UX DESIGN";
 const RIGHT_LABEL = "PROJECT";
 const CENTER_LABEL = "[03]";
-const ARROW_COLOR = "#d62828";
 const ARROW_MIN_VW = 4;
 const TRAVEL_VW = 37;
 const LABEL_GAP = "1.25rem";
+
+// Đường chữ S giữa "UX DESIGN" và "PROJECT": y = BASE + AMP * sin(x * CYCLES * 2π), x chạy từ 0 đến 1
+const ARROW_VIEW_H = 40;
+const ARROW_WAVE_BASE = 20;
+const ARROW_WAVE_AMP = 10;
+const ARROW_WAVE_CYCLES = 1.5;
+const ARROW_TRAIL_COLOR = "#d62828";
+const ARROW_TRAIL = Array.from({ length: 51 }, (_, i) => {
+  const x = i * 2;
+  const y = ARROW_WAVE_BASE + ARROW_WAVE_AMP * Math.sin((x / 100) * ARROW_WAVE_CYCLES * 2 * Math.PI);
+  return `${i === 0 ? "M" : "L"}${x} ${y.toFixed(2)}`;
+}).join(" ");
 const TRANS_RANGE = 60; // quãng cuộn chuyển cảnh (vh)
 const FADE_START = 0.25;
-const STORY_WIDTH = "60vw";
 
-// ===== Thanh tiến độ bên trái =====
-const INDICATOR_LEFT = "2.5vw";
-const INDICATOR_H = "26vh";
 
 // ===== Cuộn =====
 const STEP_VH = 115; // quãng cuộn cho mỗi nội dung (vh), lớn hơn = chuyển chậm và ít nhảy hơn
@@ -72,7 +80,7 @@ const GOTO_MS = 700; // thời lượng khi bấm vào mục bên trái (ms)
 const N = STEPS.length;
 const TOTAL_VH = TRANS_RANGE + N * STEP_VH;
 const T_END = TRANS_RANGE / TOTAL_VH;
-const COLUMN_H = "h-[min(70vh,560px)]";
+const COLUMN_H = "h-[46svh] md:h-[min(70vh,560px)]";
 
 const clamp = (v: number, min = 0, max = 1) => Math.min(Math.max(v, min), max);
 
@@ -130,8 +138,9 @@ export default function TransitionStory() {
   const leftRef = useRef<HTMLSpanElement>(null);
   const rightRef = useRef<HTMLSpanElement>(null);
   const arrowWrapRef = useRef<HTMLDivElement>(null);
-  const lineRef = useRef<HTMLDivElement>(null);
-  const headRef = useRef<HTMLDivElement>(null);
+  const beeRef = useRef<HTMLDivElement>(null);
+  const trailRef = useRef<SVGSVGElement>(null);
+  const trailMaskRef = useRef<SVGRectElement>(null);
   const centerRef = useRef<HTMLSpanElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
@@ -173,15 +182,25 @@ export default function TransitionStory() {
       if (arrowWrapRef.current) arrowWrapRef.current.style.width = `${ARROW_MIN_VW + travel * 2}vw`;
 
       const arrowOpacity = String(1 - fade);
-      if (lineRef.current) lineRef.current.style.opacity = arrowOpacity;
-      if (headRef.current) headRef.current.style.opacity = arrowOpacity;
+      // Con ong đi theo đường sóng đúng với đường chữ S đã vẽ (cùng hàm y = f(x))
+      const waveY = ARROW_WAVE_BASE + ARROW_WAVE_AMP * Math.sin(tp * ARROW_WAVE_CYCLES * 2 * Math.PI);
+      if (beeRef.current) {
+        beeRef.current.style.opacity = arrowOpacity;
+        beeRef.current.style.left = `${tp * 100}%`;
+        beeRef.current.style.top = `${(waveY / ARROW_VIEW_H) * 100}%`;
+      }
+      if (trailRef.current) {
+        trailRef.current.style.opacity = arrowOpacity;
+      }
+      // Đường nét đứt chỉ hiện ra phía sau con ong, bằng cách mở dần mặt nạ theo tiến độ
+      if (trailMaskRef.current) trailMaskRef.current.setAttribute("width", String(tp * 100));
       if (centerRef.current) centerRef.current.style.opacity = arrowOpacity;
 
       if (storyRef.current) storyRef.current.style.opacity = String(fade);
 
       const inStory = p > T_END && p < 0.999;
       if (indicatorRef.current) indicatorRef.current.style.opacity = inStory ? "1" : "0";
-      if (dotRef.current) dotRef.current.style.top = `${sp * 100}%`;
+      if (dotRef.current) dotRef.current.style.offsetDistance = `${sp * 100}%`;
 
       const idx = Math.min(Math.floor(sp * N), N - 1);
       setActive((prev) => (prev === idx ? prev : idx));
@@ -220,44 +239,14 @@ export default function TransitionStory() {
 
   return (
     <section ref={sectionRef} style={{ height: `${100 + TOTAL_VH}vh` }} className="relative bg-white text-[#1a1a1a]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
-        {/* ===== Thanh tiến độ bên trái: mảnh, nhạt, chỉ hiện trong story ===== */}
+      <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
+        {/* ===== Chỉ báo tiến độ: con ong bay theo đường chữ S, chỉ hiện trong story ===== */}
         <div
           ref={indicatorRef}
-          className="pointer-events-none absolute top-1/2 z-30 -translate-y-1/2 transition-opacity duration-500"
-          style={{ left: INDICATOR_LEFT, height: INDICATOR_H, opacity: 0 }}
+          className="pointer-events-none absolute bottom-10 left-1/2 z-30 hidden -translate-x-1/2 transition-opacity duration-500 md:block"
+          style={{ opacity: 0 }}
         >
-          <div className="absolute inset-y-0 left-0 w-px bg-[#1a1a1a]/10" />
-
-          {STEPS.map((_, i) => {
-            const isActive = i === active;
-            return (
-              <div
-                key={i}
-                className="absolute left-0 flex items-center gap-2"
-                style={{ top: `${((i + 0.5) / N) * 100}%`, transform: "translate(-50%, -50%)" }}
-              >
-                <span
-                  className={`h-1 w-1 rounded-full transition-colors duration-300 ${
-                    isActive ? "bg-[#d62828]" : "bg-[#1a1a1a]/25"
-                  }`}
-                />
-                <span
-                  className={`whitespace-nowrap font-mono text-[9px] tracking-[0.2em] transition-colors duration-300 ${
-                    isActive ? "text-[#1a1a1a]/70" : "text-[#1a1a1a]/30"
-                  }`}
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-              </div>
-            );
-          })}
-
-          <div
-            ref={dotRef}
-            className="absolute left-0 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#d62828]"
-            style={{ top: "0%" }}
-          />
+          <ScrollBee beeRef={dotRef} />
         </div>
 
         <div
@@ -265,9 +254,9 @@ export default function TransitionStory() {
           className="absolute inset-0 flex items-center justify-center"
           style={{ opacity: 0, willChange: "opacity" }}
         >
-          <div className="grid items-center gap-10 md:grid-cols-2" style={{ width: STORY_WIDTH }}>
-            <div className={`flex ${COLUMN_H} flex-col justify-start pt-[12%]`}>
-              <h2 className="font-serif text-[2vw] italic leading-[1.3] tracking-tight">
+          <div className="grid w-[90vw] items-center gap-6 md:w-[60vw] md:grid-cols-2 md:gap-10">
+            <div className="grid gap-6 md:gap-8">
+              <h2 className="font-serif text-2xl italic leading-[1.3] tracking-tight md:text-[2vw]">
                 {TITLE.map((line) => (
                   <span key={line} className="block">
                     {line}
@@ -275,7 +264,7 @@ export default function TransitionStory() {
                 ))}
               </h2>
 
-              <ol className="mt-10 space-y-6">
+              <ol className="space-y-4 md:mt-10 md:space-y-6">
                 {STEPS.map((step, i) => {
                   const isActive = i === active;
                   return (
@@ -364,7 +353,7 @@ export default function TransitionStory() {
                   show={s2}
                   from="scale"
                   delay={d.delay}
-                  className="pointer-events-none absolute"
+                  className="pointer-events-none absolute hidden md:block"
                   style={{ left: `${d.x}%`, top: `${d.y}%` }}
                 >
                   <span
@@ -378,17 +367,17 @@ export default function TransitionStory() {
 
               <div className="absolute inset-0 flex flex-col justify-center">
                 <Reveal show={s2} from="up">
-                  <h3 className="font-serif text-3xl font-semibold leading-tight">{CUE_CARD.title}</h3>
+                  <h3 className="font-serif text-xl font-semibold leading-tight md:text-3xl">{CUE_CARD.title}</h3>
                   <p className="mt-5 font-serif italic text-[#1a1a1a]/70">You should say:</p>
                 </Reveal>
 
-                <div className="mt-12 flex flex-wrap gap-x-4 gap-y-5">
+                <div className="mt-6 flex flex-wrap gap-x-3 gap-y-4 md:mt-12 md:gap-x-4 md:gap-y-5">
                   {CUE_CARD.points.map((point, i) => {
                     const st = NOTE_STYLES[i % NOTE_STYLES.length];
                     return (
                       <Reveal key={point} show={s2} from={i % 2 === 0 ? "left" : "right"} delay={300 + i * 140}>
                         <span
-                          className="inline-block rounded-[10px] px-4 py-3 font-sans text-sm leading-snug text-[#1a1a1a]"
+                          className="inline-block rounded-[10px] px-3 py-2 font-sans text-xs leading-snug text-[#1a1a1a] md:px-4 md:py-3 md:text-sm"
                           style={{ backgroundColor: st.bg, transform: `rotate(${st.rotate})` }}
                         >
                           {point}
@@ -418,7 +407,7 @@ export default function TransitionStory() {
           </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-6 md:px-12">
+        <div className="pointer-events-none absolute inset-0 z-20 hidden items-center justify-center md:flex md:px-12">
           <div className="relative flex h-10 items-center" style={{ width: `${ARROW_MIN_VW}vw` }}>
             <span
               ref={leftRef}
@@ -441,20 +430,39 @@ export default function TransitionStory() {
                 {CENTER_LABEL}
               </span>
 
-              <div ref={lineRef} className="h-[2px] w-full" style={{ backgroundColor: ARROW_COLOR, opacity: 1 }} />
+              {/* Đường cong chữ S để lại phía sau con ong */}
+              <svg
+                ref={trailRef}
+                className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+                viewBox="0 0 100 40"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <mask id="arrow-trail-mask">
+                    <rect ref={trailMaskRef} x="0" y="0" width="0" height={ARROW_VIEW_H} fill="#ffffff" />
+                  </mask>
+                </defs>
+                <path
+                  d={ARROW_TRAIL}
+                  fill="none"
+                  stroke={ARROW_TRAIL_COLOR}
+                  strokeWidth="1.2"
+                  strokeDasharray="1.5 3"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  mask="url(#arrow-trail-mask)"
+                />
+              </svg>
 
+              {/* Con ong bay từ trái sang phải theo đường chữ S, quay đầu về hướng bay */}
               <div
-                ref={headRef}
-                className="absolute -right-[1px] top-1/2 -translate-y-1/2"
-                style={{
-                  width: 0,
-                  height: 0,
-                  borderTop: "5px solid transparent",
-                  borderBottom: "5px solid transparent",
-                  borderLeft: `8px solid ${ARROW_COLOR}`,
-                  opacity: 1,
-                }}
-              />
+                ref={beeRef}
+                className="absolute text-[14px] leading-none"
+                style={{ left: "0%", top: "50%", transform: "translate(-50%, -50%)", opacity: 1 }}
+              >
+                🐝
+              </div>
             </div>
 
             <span

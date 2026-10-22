@@ -20,9 +20,12 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       frame = requestAnimationFrame(raf);
     };
     frame = requestAnimationFrame(raf);
+    // Cho các component khác (ví dụ section Learning) tự cuộn bằng đúng Lenis
+    (window as unknown as { __lenis?: Lenis }).__lenis = lenis;
 
     return () => {
       cancelAnimationFrame(frame);
+      delete (window as unknown as { __lenis?: Lenis }).__lenis;
       lenis.destroy();
     };
   }, []);
