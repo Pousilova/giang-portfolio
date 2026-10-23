@@ -77,3 +77,33 @@ select {
   opacity: 0;
   animation: note-slide-right 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
+/* ===== Cỡ chữ dùng chung cho section learning và transition story ===== */
+:root {
+  --fs-title: 1.25rem; /* H1 */
+  --fs-subtitle: 1rem; /* H2 */
+  --fs-card: 14px; /* H3: tiêu đề ghi chú */
+  --fs-text: 12px; /* body text */
+  --fs-tag: 8px; /* tag, nhãn */
+}
+
+@media (min-width: 768px) {
+  :root {
+    --fs-title: 29px;
+    --fs-subtitle: 13.5px;
+    --fs-card: 16px;
+    --fs-text: 12px;
+    --fs-tag: 9px;
+  }
+}
+
+/* Máy tính bảng (768–1023px): các cỡ chữ gấp 2 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --fs-title: 50px;
+    --fs-subtitle: 32px;
+    --fs-card: 32px;
+    --fs-text: 24px;
+    --fs-tag: 18px;
+  }
+}

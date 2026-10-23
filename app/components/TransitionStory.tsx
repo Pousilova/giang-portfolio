@@ -7,18 +7,18 @@ import ScrollBee from "./ScrollBee";
 // ===== Nội dung các mục story (thay bằng nội dung thật) =====
 const STEPS = [
   {
-    label: "NÓI THEO BẢN NĂNG",
+    label: "Nói theo bản năng",
     body:
       "A real business challenge: redesigning the journey of a car comparison platform, from discovery to qualified booking. The project explored how UX research and design could support complex purchase decisions.",
     meta: "UX Design Executive Course · POLI.design × DriveK",
   },
   {
-    label: "NÓI THAT'S EVERYTHING KHI CHƯA TỚI NGƯỠNG 2 PHÚT",
+    label: "Nói that's everything khi chưa tới ngưỡng 2 phút",
     body: "Nội dung placeholder cho mục này. Bạn thay bằng đoạn mô tả thật về cách mình xử lý khi chưa đủ thời gian trả lời.",
     meta: "Placeholder",
   },
   {
-    label: "KHÔNG DÙNG SIGNPOSTS VÀ LINKERS",
+    label: "Không dùng signposts và linkers",
     body: "Nội dung placeholder cho mục này. Bạn thay bằng đoạn mô tả thật về việc bỏ các từ nối và cách giữ mạch lập luận.",
     meta: "Placeholder",
   },
@@ -80,7 +80,7 @@ const GOTO_MS = 700; // thời lượng khi bấm vào mục bên trái (ms)
 const N = STEPS.length;
 const TOTAL_VH = TRANS_RANGE + N * STEP_VH;
 const T_END = TRANS_RANGE / TOTAL_VH;
-const COLUMN_H = "h-[46svh] md:h-[min(70vh,560px)]";
+const COLUMN_H = "h-[46svh] md:h-[38vh] lg:h-[min(70vh,560px)]";
 
 const clamp = (v: number, min = 0, max = 1) => Math.min(Math.max(v, min), max);
 
@@ -254,12 +254,12 @@ export default function TransitionStory() {
           className="absolute inset-0 flex items-center justify-center"
           style={{ opacity: 0, willChange: "opacity" }}
         >
-          <div className="grid w-[90vw] items-center gap-6 md:w-[60vw] md:grid-cols-2 md:gap-[13.2rem]">
+          <div className="grid w-[90vw] items-center gap-6 lg:w-[60vw] lg:grid-cols-2 lg:gap-[13.2rem]">
             <div className="grid gap-6 md:gap-8">
-              <h2 className="font-serif text-[1.25rem] italic leading-[1.3] tracking-tight md:text-[2vw]">
+              <h2 className="font-serif text-[length:var(--fs-title)] italic leading-[1.25] tracking-tight md:leading-[1.3]">
                 {TITLE.map((line) => (
-                  <span key={line} className="block">
-                    {line}
+                  <span key={line} className="block md:max-lg:inline">
+                    {line}{" "}
                   </span>
                 ))}
               </h2>
@@ -281,8 +281,8 @@ export default function TransitionStory() {
                           }`}
                         />
                         <span
-                          className={`font-mono text-[8px] uppercase tracking-[0.2em] md:text-[0.625vw] transition-colors duration-300 group-hover:text-[#1a1a1a] ${
-                            isActive ? "text-[#1a1a1a]" : "text-[#9a9a9a]"
+                          className={`font-sans text-[length:var(--fs-subtitle)] transition-colors duration-300 group-hover:text-[#1a1a1a] ${
+                            isActive ? "font-bold text-[#1a1a1a]" : "text-[#9a9a9a]"
                           }`}
                         >
                           {step.label}
@@ -297,10 +297,10 @@ export default function TransitionStory() {
                         }`}
                       >
                         <div className="overflow-hidden">
-                          <p className="mt-4 max-w-md pl-6 text-sm leading-relaxed text-justify md:text-[0.85vw] text-[#1a1a1a]/75">
+                          <p className="mt-4 pl-6 lg:max-w-md text-[length:var(--fs-text)] leading-relaxed text-justify text-[#1a1a1a]">
                             {step.body}
                           </p>
-                          <p className="mt-3 pl-6 font-mono text-[9px] text-[#9a9a9a] md:text-[0.55vw]">{step.meta}</p>
+                          <p className="mt-3 pl-6 font-mono text-[length:var(--fs-tag)] text-[#9a9a9a]">{step.meta}</p>
                         </div>
                       </div>
                     </li>
@@ -367,7 +367,7 @@ export default function TransitionStory() {
 
               <div className="absolute inset-0 flex flex-col justify-center">
                 <Reveal show={s2} from="up">
-                  <h3 className="font-serif text-[14px] font-semibold leading-tight md:text-[1.125vw]">{CUE_CARD.title}</h3>
+                  <h3 className="font-serif text-[length:var(--fs-card)] font-semibold leading-tight">{CUE_CARD.title}</h3>
                   <p className="mt-5 font-serif italic text-[#1a1a1a]/70">You should say:</p>
                 </Reveal>
 
@@ -377,7 +377,7 @@ export default function TransitionStory() {
                     return (
                       <Reveal key={point} show={s2} from={i % 2 === 0 ? "left" : "right"} delay={300 + i * 140}>
                         <span
-                          className="inline-block rounded-[10px] px-3 py-2 font-sans text-[10px] leading-snug text-[#1a1a1a] md:px-4 md:py-3 md:text-[0.7vw]"
+                          className="inline-block rounded-[10px] px-3 py-2 font-sans text-[length:var(--fs-text)] leading-snug text-[#1a1a1a] md:px-4 md:py-3"
                           style={{ backgroundColor: st.bg, transform: `rotate(${st.rotate})` }}
                         >
                           {point}
@@ -407,7 +407,7 @@ export default function TransitionStory() {
           </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-0 z-20 hidden items-center justify-center md:flex md:px-12">
+        <div className="pointer-events-none absolute inset-0 z-20 hidden items-center justify-center lg:flex lg:px-12">
           <div className="relative flex h-10 items-center" style={{ width: `${ARROW_MIN_VW}vw` }}>
             <span
               ref={leftRef}

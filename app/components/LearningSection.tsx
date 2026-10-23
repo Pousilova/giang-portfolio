@@ -412,24 +412,24 @@ function NoteContent({ index }: { index: number }) {
       <style>{`@keyframes note-slide-right { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } } .note-slide-right { opacity: 0; animation: note-slide-right 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }`}</style>
       <div className="flex flex-wrap items-center gap-2">
         <span
-          className="note-slide-right inline-block w-max rounded-md px-2 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.15em] md:text-[0.625vw]"
+          className="note-slide-right inline-block w-max rounded-md px-2 py-1 font-mono text-[length:var(--fs-tag)] font-bold uppercase tracking-[0.15em]"
           style={{ backgroundColor: LEVEL_TINT[card.level].bg, color: LEVEL_TINT[card.level].fg }}
         >
           {LEVELS[card.level]}
         </span>
-        <span className="note-slide-right font-mono text-[8px] font-bold uppercase tracking-[0.2em] md:text-[0.625vw]" style={{ color, animationDelay: "120ms" }}>
+        <span className="note-slide-right font-mono text-[length:var(--fs-tag)] font-bold uppercase tracking-[0.2em]" style={{ color, animationDelay: "120ms" }}>
           {card.crit}
         </span>
       </div>
-      <h4 className="note-rise mt-3 text-[14px] font-bold md:mt-[0.8vw] md:text-[1.125vw]" style={{ animationDelay: "240ms" }}>
+      <h4 className="note-rise mt-3 text-[length:var(--fs-card)] font-bold md:mt-[0.8vw]" style={{ animationDelay: "240ms" }}>
         {card.title}
       </h4>
-      <p className="mt-2 text-[11px] leading-snug text-[#1a1a1a]/70 md:mt-[0.5vw] md:text-[0.875vw]">
+      <p className="mt-2 text-[length:var(--fs-text)] leading-snug text-[#1a1a1a] md:mt-[0.5vw]">
         <RiseText text={card.note} delay={200} />
       </p>
       {EXAMPLES[card.title] && (
         <div
-          className="note-rise mt-3 text-[11px] leading-relaxed text-justify text-[#1a1a1a]/65 md:mt-[0.8vw] md:text-[0.875vw]"
+          className="note-rise mt-3 text-[length:var(--fs-text)] leading-relaxed text-justify text-[#1a1a1a] md:mt-[0.8vw]"
           style={{ animationDelay: "520ms" }}
         >
           {EXAMPLES[card.title].map((sentence, i) => (
@@ -541,23 +541,34 @@ const DECOR_TRANSFORM: Record<Crit, string | undefined> = {
 function NoteCard({ active, index }: { active: boolean; index: number }) {
   const bg = active ? CRIT_BG[CARDS[index].crit] : "#f3f3f1";
   return (
-    // Chiều cao cố định (bằng hàng chữ bên trái), nội dung không làm đổi bố cục khi kéo
+    // Trên máy tính bảng các ghi chú xếp chồng trong cùng một ô lưới, khung cao bằng ghi chú dài nhất và không đổi khi đổi tab
     <div
-      className="relative h-[15rem] w-full overflow-hidden rounded-2xl px-5 py-4 transition-colors duration-500 md:h-full md:px-[1.6vw] md:py-[1.2vw]"
+      className="relative h-auto w-full overflow-hidden rounded-2xl px-5 py-4 transition-colors duration-500 md:h-full md:px-[23px] md:py-[17.5px] md:max-lg:grid"
       style={{ backgroundColor: bg }}
     >
       {/* Hình cầu bóng loáng ở góc phải, hình dạng khác nhau theo tiêu chí */}
       {active && <NoteDecor crit={CARDS[index].crit} />}
-      {active ? (
-        <NoteContent key={index} index={index} />
-      ) : (
-        <div className="relative z-10">
-          <span className="inline-block w-max rounded-md bg-white px-2 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-[#9a9a9a] md:text-[0.625vw]">
-            TIP
-          </span>
-          <p className="mt-3 text-[14px] font-bold md:mt-[0.8vw] md:text-[1.125vw]">Kéo thẻ để xem tip điểm cao.</p>
-        </div>
-      )}
+      {CARDS.map((_, k) => {
+        const on = active && k === index;
+        // Ghi chú không được chọn chỉ giữ chỗ trên máy tính bảng; trên các cỡ khác không hiển thị
+        // Khóa đổi theo trạng thái để nội dung chạy lại hiệu ứng mỗi khi được chọn
+        return (
+          <div
+            key={`${k}-${on}`}
+            className={`md:max-lg:col-start-1 md:max-lg:row-start-1 ${on ? "" : "hidden md:max-lg:block md:max-lg:invisible"}`}
+          >
+            <NoteContent index={k} />
+          </div>
+        );
+      })}
+      <div
+        className={`relative z-10 md:max-lg:col-start-1 md:max-lg:row-start-1 ${active ? "hidden md:max-lg:block md:max-lg:invisible" : ""}`}
+      >
+        <span className="inline-block w-max rounded-md bg-white px-2 py-1 font-mono text-[length:var(--fs-tag)] font-bold uppercase tracking-[0.15em] text-[#9a9a9a]">
+          TIP
+        </span>
+        <p className="mt-3 text-[length:var(--fs-card)] font-bold md:mt-[0.8vw]">Kéo thẻ để xem tip điểm cao.</p>
+      </div>
     </div>
   );
 }
@@ -925,14 +936,14 @@ export default function LearningSection() {
       <div className="sticky top-0 relative flex h-screen flex-col overflow-hidden bg-white py-8 md:py-[4vh]">
         <div className="shrink-0 px-5 md:px-12">
           {/* Cố định chiều cao khối đầu để hai hàng thẻ không bị đẩy khi nội dung ghi chú thay đổi */}
-          <div className="grid gap-6 md:h-[11.5rem] md:grid-cols-2 md:gap-12">
+          <div className="grid gap-6 md:h-auto md:grid-cols-1 lg:h-[11.5rem] lg:grid-cols-2 lg:gap-12">
             {/* Bên trái: tiêu đề và mô tả */}
             <div style={revealStyle(0)}>
-              <h2 className="font-serif text-[1.25rem] italic leading-[1.25] tracking-tight md:text-[2vw] md:leading-[1.3]">
+              <h2 className="font-serif text-[length:var(--fs-title)] italic leading-[1.25] tracking-tight md:leading-[1.3]">
                 {HEADLINE}
               </h2>
-              <p className="mt-4 text-base font-medium leading-snug md:text-[0.95vw]">{LEFT_HEAD}</p>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-justify text-[#1a1a1a]/65 md:text-[0.85vw]">{LEFT_BODY}</p>
+              <p className="mt-4 text-[length:var(--fs-subtitle)] font-medium leading-snug">{LEFT_HEAD}</p>
+              <p className="mt-2 max-w-xl text-[length:var(--fs-text)] leading-relaxed text-justify text-[#1a1a1a]">{LEFT_BODY}</p>
             </div>
 
             {/* Bên phải: ghi chú hiện khi một tab chạm mũi tên đỏ, cùng hàng với tiêu đề */}
