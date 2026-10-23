@@ -327,7 +327,7 @@ export default function IeltsOverview() {
       <div
         ref={trackRef}
         className="mx-auto grid w-full cursor-grab select-none place-items-center"
-        style={{ "--cw": "min(560px, 85vw)", perspective: `${PERSPECTIVE}px` } as CSSProperties}
+        style={{ "--cw": "min(476px, 72.25vw)", perspective: `${PERSPECTIVE}px` } as CSSProperties}
       >
         {EXAMS.map((exam, i) => {
           const dir: "rise" | "left" | "right" = i === 0 ? "rise" : wrapDistance(i, EXAMS.length) > 0 ? "right" : "left";

@@ -254,9 +254,9 @@ export default function TransitionStory() {
           className="absolute inset-0 flex items-center justify-center"
           style={{ opacity: 0, willChange: "opacity" }}
         >
-          <div className="grid w-[90vw] items-center gap-6 md:w-[60vw] md:grid-cols-2 md:gap-10">
+          <div className="grid w-[90vw] items-center gap-6 md:w-[60vw] md:grid-cols-2 md:gap-[13.2rem]">
             <div className="grid gap-6 md:gap-8">
-              <h2 className="font-serif text-2xl italic leading-[1.3] tracking-tight md:text-[2vw]">
+              <h2 className="font-serif text-[1.25rem] italic leading-[1.3] tracking-tight md:text-[2vw]">
                 {TITLE.map((line) => (
                   <span key={line} className="block">
                     {line}
@@ -281,7 +281,7 @@ export default function TransitionStory() {
                           }`}
                         />
                         <span
-                          className={`font-mono text-xs uppercase tracking-[0.2em] transition-colors duration-300 group-hover:text-[#1a1a1a] ${
+                          className={`font-mono text-[8px] uppercase tracking-[0.2em] md:text-[0.625vw] transition-colors duration-300 group-hover:text-[#1a1a1a] ${
                             isActive ? "text-[#1a1a1a]" : "text-[#9a9a9a]"
                           }`}
                         >
@@ -297,10 +297,10 @@ export default function TransitionStory() {
                         }`}
                       >
                         <div className="overflow-hidden">
-                          <p className="mt-4 max-w-md pl-6 text-base leading-relaxed text-[#1a1a1a]/75">
+                          <p className="mt-4 max-w-md pl-6 text-sm leading-relaxed text-justify md:text-[0.85vw] text-[#1a1a1a]/75">
                             {step.body}
                           </p>
-                          <p className="mt-3 pl-6 font-mono text-xs text-[#9a9a9a]">{step.meta}</p>
+                          <p className="mt-3 pl-6 font-mono text-[9px] text-[#9a9a9a] md:text-[0.55vw]">{step.meta}</p>
                         </div>
                       </div>
                     </li>
@@ -341,7 +341,7 @@ export default function TransitionStory() {
               </Reveal>
 
               <Reveal show={s1} from="up" delay={650} className="absolute inset-x-[10%] bottom-6">
-                <div className="flex items-center gap-3 rounded-full border border-[#1a1a1a]/15 bg-white px-5 py-3 text-sm">
+                <div className="flex items-center gap-3 rounded-full border border-[#1a1a1a]/15 bg-white px-5 py-3 text-[11px] md:text-[0.875vw]">
                   <span className="text-[#9a9a9a]">⌕</span>
                   <span>new 500 trunk space</span>
                 </div>
@@ -357,7 +357,7 @@ export default function TransitionStory() {
                   style={{ left: `${d.x}%`, top: `${d.y}%` }}
                 >
                   <span
-                    className="block whitespace-nowrap font-serif italic text-sm text-[#6b6b6b]"
+                    className="block whitespace-nowrap font-serif italic text-[11px] md:text-[0.875vw] text-[#6b6b6b]"
                     style={{ transform: `rotate(${d.rotate}deg)` }}
                   >
                     {d.text}
@@ -367,7 +367,7 @@ export default function TransitionStory() {
 
               <div className="absolute inset-0 flex flex-col justify-center">
                 <Reveal show={s2} from="up">
-                  <h3 className="font-serif text-xl font-semibold leading-tight md:text-3xl">{CUE_CARD.title}</h3>
+                  <h3 className="font-serif text-[14px] font-semibold leading-tight md:text-[1.125vw]">{CUE_CARD.title}</h3>
                   <p className="mt-5 font-serif italic text-[#1a1a1a]/70">You should say:</p>
                 </Reveal>
 
@@ -377,7 +377,7 @@ export default function TransitionStory() {
                     return (
                       <Reveal key={point} show={s2} from={i % 2 === 0 ? "left" : "right"} delay={300 + i * 140}>
                         <span
-                          className="inline-block rounded-[10px] px-3 py-2 font-sans text-xs leading-snug text-[#1a1a1a] md:px-4 md:py-3 md:text-sm"
+                          className="inline-block rounded-[10px] px-3 py-2 font-sans text-[10px] leading-snug text-[#1a1a1a] md:px-4 md:py-3 md:text-[0.7vw]"
                           style={{ backgroundColor: st.bg, transform: `rotate(${st.rotate})` }}
                         >
                           {point}
@@ -390,7 +390,7 @@ export default function TransitionStory() {
 
               <Reveal show={s3} from="scale" className="absolute inset-0">
                 <div className="relative h-full w-full overflow-hidden rounded-2xl border border-[#1a1a1a]/10 bg-[#f4f4f2]">
-                  <div className="flex h-full items-center justify-center font-mono text-xs uppercase tracking-[0.2em] text-[#9a9a9a]">
+                  <div className="flex h-full items-center justify-center font-mono text-[9px] md:text-[0.55vw] uppercase tracking-[0.2em] text-[#9a9a9a]">
                     Image / video placeholder
                   </div>
                 </div>

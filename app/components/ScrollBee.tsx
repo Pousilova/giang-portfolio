@@ -26,7 +26,14 @@ export default function ScrollBee({ beeRef }: { beeRef: RefObject<HTMLDivElement
         <path d={BEE_PATH} fill="none" stroke="#1a1a1a" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" />
       </svg>
       <div ref={beeRef} className="absolute left-0 top-0 text-[14px] leading-none" style={beeStyle}>
+        {/* Chữ đi kèm con ong, di chuyển cùng con ong */}
+        <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.15em] text-[#1a1a1a]/70">
+          lăn chuột đi
+        </span>
         🐝
+        <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.15em] text-[#1a1a1a]/70">
+          haha
+        </span>
       </div>
     </div>
   );

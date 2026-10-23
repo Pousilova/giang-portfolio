@@ -22,14 +22,14 @@ export default function Home() {
 
         <LearningSection />
 
-        <section id="score-85" className="border-t border-[#1a1a1a]/20 px-6 py-24 md:px-12">
-          <h2 className="font-serif text-5xl italic md:text-6xl">Cách mình đạt 8.5</h2>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed">Nội dung đang chờ bạn bổ sung.</p>
+        <section id="score-85" className="border-t border-[#1a1a1a]/20 px-6 py-32 md:px-12 md:py-40">
+          <h2 className="font-serif text-[length:var(--fs-h1)] italic">Cách mình đạt 8.5</h2>
+          <p className="mt-6 max-w-2xl text-[length:var(--fs-body-lg)] leading-relaxed text-justify">Nội dung đang chờ bạn bổ sung.</p>
         </section>
 
-        <section id="about" className="grid gap-12 px-6 py-24 md:grid-cols-2 md:px-12">
-          <h2 className="font-serif text-5xl italic md:text-6xl">About Giang</h2>
-          <div className="space-y-5 text-lg leading-relaxed">
+        <section id="about" className="grid gap-16 px-6 py-32 md:grid-cols-2 md:px-12 md:py-40">
+          <h2 className="font-serif text-[length:var(--fs-h1)] italic">About Giang</h2>
+          <div className="space-y-5 text-[length:var(--fs-body-lg)] leading-relaxed text-justify">
             <p>
               Tôi là Giang, người yêu nhiếp ảnh và chỉnh sửa ảnh. Tôi tin rằng một
               bức ảnh đẹp bắt đầu từ ánh sáng, bố cục và cảm xúc.
@@ -41,21 +41,21 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="work" className="border-t border-[#1a1a1a]/20 px-6 py-20 md:px-12">
-          <h2 className="max-w-md text-4xl leading-tight tracking-tight md:text-5xl">What I do.</h2>
+        <section id="work" className="border-t border-[#1a1a1a]/20 px-6 py-28 md:px-12 md:py-36">
+          <h2 className="max-w-md text-[length:var(--fs-h2)] leading-tight tracking-tight">What I do.</h2>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {SERVICES.map((item) => (
               <div key={item.title} className="rounded-2xl border border-[#1a1a1a]/20 p-8">
-                <h3 className="font-serif text-3xl italic">{item.title}</h3>
-                <p className="mt-4 text-base leading-relaxed">{item.text}</p>
+                <h3 className="font-serif text-[length:var(--fs-h3)] italic">{item.title}</h3>
+                <p className="mt-4 text-[length:var(--fs-body)] leading-relaxed text-justify">{item.text}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section id="contact" className="border-t border-[#1a1a1a]/20 px-6 py-20 md:px-12">
-          <h2 className="font-serif text-5xl italic md:text-6xl">Let&apos;s talk.</h2>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed">
+        <section id="contact" className="border-t border-[#1a1a1a]/20 px-6 py-28 md:px-12 md:py-36">
+          <h2 className="font-serif text-[length:var(--fs-h1)] italic">Let&apos;s talk.</h2>
+          <p className="mt-6 max-w-xl text-[length:var(--fs-body-lg)] leading-relaxed text-justify">
             Bạn muốn hợp tác chụp ảnh hay chỉnh sửa ảnh? Liên hệ với tôi qua email hoặc Instagram.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
@@ -68,7 +68,7 @@ export default function Home() {
           </div>
         </section>
 
-        <footer className="border-t border-[#1a1a1a]/20 px-6 py-8 font-mono text-xs uppercase tracking-[0.15em] md:px-12">
+        <footer className="border-t border-[#1a1a1a]/20 px-6 py-8 font-mono text-[length:var(--fs-small)] uppercase tracking-[0.15em] md:px-12">
           © 2026 Giang
         </footer>
       </main>

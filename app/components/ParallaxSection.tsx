@@ -103,16 +103,16 @@ export default function ParallaxSection() {
     >
       {/* Cột text: bên trái */}
       <div className="relative z-10 md:absolute md:left-[5%] md:top-1/2 md:w-[32%] md:-translate-y-1/2">
-        <p className="text-base text-[#8a8a8a]">About our wallpapers</p>
+        <p className="text-[length:var(--fs-body-lg)] text-[#8a8a8a]">About our wallpapers</p>
 
-        <p className="mt-6 text-lg leading-relaxed">
+        <p className="mt-6 text-[length:var(--fs-body-lg)] leading-relaxed text-justify">
           Mỗi tác phẩm là sự kết hợp giữa tay nghề, chi tiết tinh tế và niềm đam mê sáng tạo.
           Chúng mình muốn mang nghệ thuật vào không gian sống của bạn.
         </p>
 
         <div className="mt-12 grid grid-cols-1 gap-x-10 sm:grid-cols-2">
           {BLOCKS.map((title) => (
-            <div key={title} className="border-b border-[#1a1a1a]/20 py-8 text-lg">
+            <div key={title} className="border-b border-[#1a1a1a]/20 py-8 text-[length:var(--fs-body-lg)]">
               {title}
             </div>
           ))}
@@ -120,7 +120,7 @@ export default function ParallaxSection() {
 
         <a
           href="#contact"
-          className="mt-12 inline-flex items-center gap-4 border border-[#1a1a1a]/25 px-8 py-5 text-base hover:bg-[#1a1a1a] hover:text-white"
+          className="mt-12 inline-flex items-center gap-4 border border-[#1a1a1a]/25 px-8 py-5 text-[length:var(--fs-body-lg)] hover:bg-[#1a1a1a] hover:text-white"
         >
           Tìm hiểu thêm <span>→</span>
         </a>

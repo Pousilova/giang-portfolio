@@ -23,3 +23,57 @@ textarea,
 select {
   font-family: inherit;
 }
+
+/* Chữ của thẻ ghi chú trượt lên lần lượt */
+@keyframes note-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.note-rise {
+  opacity: 0;
+  animation: note-rise 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+/* ===== Bộ cỡ chữ dùng chung cho toàn trang: mobile là giá trị mặc định, từ 768px trở lên dùng giá trị md ===== */
+:root {
+  --fs-h1: 1.5rem; /* tiêu đề section lớn */
+  --fs-h2: 1.25rem; /* tiêu đề phụ */
+  --fs-h3: 0.875rem; /* tiêu đề nhỏ */
+  --fs-body-lg: 1rem; /* đoạn văn nổi bật */
+  --fs-body: 0.875rem; /* nội dung thường */
+  --fs-small: 0.75rem; /* chữ nhỏ, chú thích */
+}
+
+@media (min-width: 768px) {
+  :root {
+    --fs-h1: 3.75rem;
+    --fs-h2: 3rem;
+    --fs-h3: 1.25rem;
+    --fs-body-lg: 1.125rem;
+    --fs-body: 1rem;
+    --fs-small: 0.875rem;
+  }
+}
+
+/* Trượt nhẹ từ bên phải vào, dùng cho nhãn cấp độ và tên tiêu chí */
+@keyframes note-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.note-slide-right {
+  opacity: 0;
+  animation: note-slide-right 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
