@@ -6,7 +6,8 @@ import ScrollBee from "./ScrollBee";
 
 // ===== Cấu hình =====
 type Crit = "FC" | "LR" | "GRA" | "PRON";
-type Ease = "easy" | "hard";
+// Độ khó dùng: 1 (dễ nhất) đến 5 sao
+type Ease = 1 | 2 | 3 | 4 | 5;
 
 // Kích thước thẻ trên desktop (vw) và trên mobile (px)
 const CARD_VW = 9.8;
@@ -63,18 +64,30 @@ const LINK_STYLES = [
   { color: "#1a1a1a", dash: "1 6", width: 1.6 },
 ];
 
-const EASE_LABEL: Record<Ease, string> = {
-  easy: "Dễ dùng",
-  hard: "Khó dùng",
+// Màu sao theo độ khó: 1 xanh lá, 2 vàng, 3 xanh dương, 4 tím, 5 đỏ
+const EASE_COLOR: Record<Ease, string> = {
+  1: "#2a9d55",
+  2: "#f7b52c",
+  3: "#3b7dd8",
+  4: "#8b5cf6",
+  5: "#d62828",
 };
 
-const LEVELS = ["Basic", "Intermediate", "Upper-Intermediate", "Advanced"];
-const LEVEL_TINT = [
-  { bg: "#d6f5e3", fg: "#1a1a1a" },
-  { bg: "#fdf5b5", fg: "#1a1a1a" },
-  { bg: "#cdeefc", fg: "#1a1a1a" },
-  { bg: "#fde0d4", fg: "#1a1a1a" },
-];
+// 5 ngôi sao nhỏ, tô màu số sao bằng độ khó, phần còn lại xám nhạt
+function EaseStars({ ease }: { ease: Ease }) {
+  return (
+    <span className="inline-flex items-center gap-[1px] align-[-0.1em]" aria-label={`Độ khó ${ease}/5`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <svg key={i} viewBox="0 0 24 24" className="h-[1.2em] w-[1.2em]" aria-hidden="true">
+          <path
+            d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
+            fill={i < ease ? EASE_COLOR[ease] : "#dcdcdc"}
+          />
+        </svg>
+      ))}
+    </span>
+  );
+}
 
 // Màu tiêu chí chọn sao cho không trùng với bốn màu độ khó (xanh bạc hà, vàng, xanh dương, cam đào)
 const CRIT_COLOR: Record<Crit, string> = {
@@ -163,35 +176,35 @@ const NOTES: Record<string, string> = {
 };
 
 const RAW_CARDS: Card[] = [
-  { level: 0, crit: "FC", title: "Tốc độ nói", body: "Nói đủ nhanh để tự nhiên, nhưng người nghe vẫn theo kịp.", ease: "easy" },
-  { level: 0, crit: "PRON", title: "Phát âm rõ", body: "Phát âm từng âm rõ ràng, người nghe không phải đoán ý.", ease: "easy" },
-  { level: 0, crit: "LR", title: "Từ vựng theo chủ đề", body: "Dùng từ vựng bám sát chủ đề đang được hỏi.", ease: "easy" },
-  { level: 0, crit: "GRA", title: "Từ loại", body: "Dùng đúng danh từ, động từ, tính từ và trạng từ.", ease: "easy" },
-  { level: 1, crit: "FC", title: "Ngắt nghỉ", body: "Giảm tiếng ờ, ừm và các khoảng lặng quá dài.", ease: "easy" },
-  { level: 1, crit: "GRA", title: "Câu đơn và câu phức", body: "Kết hợp câu đơn và câu phức để ý nối tiếp mạch lạc.", ease: "easy" },
-  { level: 1, crit: "LR", title: "Đúng nghĩa", body: "Dùng đúng nghĩa và đúng ngữ cảnh của từng từ.", ease: "hard" },
-  { level: 1, crit: "PRON", title: "Ngữ điệu", body: "Lên xuống giọng để nhấn đúng ý quan trọng.", ease: "hard" },
-  { level: 0, crit: "GRA", title: "Mạo từ", body: "Dùng đúng a, an, the trước danh từ.", ease: "easy" },
-  { level: 0, crit: "GRA", title: "Số ít và số nhiều", body: "Phân biệt đúng danh từ số ít và số nhiều.", ease: "easy" },
-  { level: 1, crit: "LR", title: "Collocations", body: "Ghép từ theo cách người bản xứ thường nói.", ease: "hard" },
-  { level: 1, crit: "FC", title: "Tránh lặp lại", body: "Tránh lặp lại cùng một ý hoặc cùng một từ.", ease: "easy" },
-  { level: 1, crit: "FC", title: "Độ dài câu trả lời", body: "Trả lời đủ dài để triển khai ý, không cụt lủn.", ease: "easy" },
-  { level: 1, crit: "LR", title: "Cụm động từ", body: "Dùng cụm động từ như look up, give up, carry on.", ease: "hard" },
-  { level: 1, crit: "GRA", title: "Đa dạng thì", body: "Đổi linh hoạt giữa các thì khi kể chuyện và so sánh.", ease: "hard" },
-  { level: 1, crit: "PRON", title: "Âm cuối", body: "Phát âm rõ -s, -es, -ed và các phụ âm cuối.", ease: "easy" },
-  { level: 2, crit: "FC", title: "Đúng trọng tâm", body: "Trả lời đúng trọng tâm câu hỏi, không lạc đề.", ease: "easy" },
-  { level: 2, crit: "FC", title: "Triển khai ý", body: "Nêu lý do, ví dụ, rồi kết luận ngắn gọn.", ease: "easy" },
-  { level: 2, crit: "FC", title: "Từ nối", body: "Dùng từ nối như however, moreover, as a result.", ease: "easy" },
-  { level: 2, crit: "LR", title: "Paraphrase", body: "Diễn đạt lại ý bằng từ khác, không lặp từ khóa.", ease: "hard" },
-  { level: 3, crit: "LR", title: "Idiom", body: "Dùng thành ngữ vừa đủ, đúng ngữ cảnh.", ease: "hard" },
-  { level: 3, crit: "GRA", title: "So sánh", body: "So sánh hơn, so sánh nhất và so sánh ngang bằng.", ease: "easy" },
-  { level: 3, crit: "GRA", title: "Câu bị động", body: "Dùng câu bị động để nhấn vào hành động.", ease: "easy" },
-  { level: 3, crit: "GRA", title: "Câu điều kiện", body: "Dùng câu điều kiện để nói giả định và kết quả.", ease: "easy" },
-  { level: 3, crit: "GRA", title: "Mệnh đề quan hệ", body: "Dùng mệnh đề quan hệ để bổ sung thông tin.", ease: "hard" },
-  { level: 3, crit: "GRA", title: "Đảo ngữ", body: "Đảo ngữ để nhấn mạnh, tạo ấn tượng tự nhiên.", ease: "hard" },
-  { level: 3, crit: "PRON", title: "Nối âm", body: "Nối âm cuối với âm đầu để câu nói liền mạch hơn.", ease: "hard" },
-  { level: 3, crit: "PRON", title: "Nhóm từ", body: "Chia câu thành các cụm ý ngắn, mỗi cụm một nhịp.", ease: "hard" },
-  { level: 3, crit: "PRON", title: "Trọng âm từ", body: "Nhấn đúng âm tiết của từ để người nghe dễ hiểu.", ease: "hard" },
+  { level: 0, crit: "FC", title: "Tốc độ nói", body: "Nói đủ nhanh để tự nhiên, nhưng người nghe vẫn theo kịp.", ease: 2 },
+  { level: 0, crit: "PRON", title: "Phát âm rõ", body: "Phát âm từng âm rõ ràng, người nghe không phải đoán ý.", ease: 2 },
+  { level: 0, crit: "LR", title: "Từ vựng theo chủ đề", body: "Dùng từ vựng bám sát chủ đề đang được hỏi.", ease: 1 },
+  { level: 0, crit: "GRA", title: "Từ loại", body: "Dùng đúng danh từ, động từ, tính từ và trạng từ.", ease: 1 },
+  { level: 1, crit: "FC", title: "Ngắt nghỉ", body: "Giảm tiếng ờ, ừm và các khoảng lặng quá dài.", ease: 2 },
+  { level: 1, crit: "GRA", title: "Câu đơn và câu phức", body: "Kết hợp câu đơn và câu phức để ý nối tiếp mạch lạc.", ease: 2 },
+  { level: 1, crit: "LR", title: "Đúng nghĩa", body: "Dùng đúng nghĩa và đúng ngữ cảnh của từng từ.", ease: 3 },
+  { level: 1, crit: "PRON", title: "Ngữ điệu", body: "Lên xuống giọng để nhấn đúng ý quan trọng.", ease: 4 },
+  { level: 0, crit: "GRA", title: "Mạo từ", body: "Dùng đúng a, an, the trước danh từ.", ease: 2 },
+  { level: 0, crit: "GRA", title: "Số ít và số nhiều", body: "Phân biệt đúng danh từ số ít và số nhiều.", ease: 1 },
+  { level: 1, crit: "LR", title: "Collocations", body: "Ghép từ theo cách người bản xứ thường nói.", ease: 3 },
+  { level: 1, crit: "FC", title: "Tránh lặp lại", body: "Tránh lặp lại cùng một ý hoặc cùng một từ.", ease: 2 },
+  { level: 1, crit: "FC", title: "Độ dài câu trả lời", body: "Trả lời đủ dài để triển khai ý, không cụt lủn.", ease: 1 },
+  { level: 1, crit: "LR", title: "Cụm động từ", body: "Dùng cụm động từ như look up, give up, carry on.", ease: 3 },
+  { level: 1, crit: "GRA", title: "Đa dạng thì", body: "Đổi linh hoạt giữa các thì khi kể chuyện và so sánh.", ease: 3 },
+  { level: 1, crit: "PRON", title: "Âm cuối", body: "Phát âm rõ -s, -es, -ed và các phụ âm cuối.", ease: 2 },
+  { level: 2, crit: "FC", title: "Đúng trọng tâm", body: "Trả lời đúng trọng tâm câu hỏi, không lạc đề.", ease: 1 },
+  { level: 2, crit: "FC", title: "Triển khai ý", body: "Nêu lý do, ví dụ, rồi kết luận ngắn gọn.", ease: 2 },
+  { level: 2, crit: "FC", title: "Từ nối", body: "Dùng từ nối như however, moreover, as a result.", ease: 1 },
+  { level: 2, crit: "LR", title: "Paraphrase", body: "Diễn đạt lại ý bằng từ khác, không lặp từ khóa.", ease: 3 },
+  { level: 3, crit: "LR", title: "Idiom", body: "Dùng thành ngữ vừa đủ, đúng ngữ cảnh.", ease: 5 },
+  { level: 3, crit: "GRA", title: "So sánh", body: "So sánh hơn, so sánh nhất và so sánh ngang bằng.", ease: 1 },
+  { level: 3, crit: "GRA", title: "Câu bị động", body: "Dùng câu bị động để nhấn vào hành động.", ease: 2 },
+  { level: 3, crit: "GRA", title: "Câu điều kiện", body: "Dùng câu điều kiện để nói giả định và kết quả.", ease: 2 },
+  { level: 3, crit: "GRA", title: "Mệnh đề quan hệ", body: "Dùng mệnh đề quan hệ để bổ sung thông tin.", ease: 3 },
+  { level: 3, crit: "GRA", title: "Đảo ngữ", body: "Đảo ngữ để nhấn mạnh, tạo ấn tượng tự nhiên.", ease: 5 },
+  { level: 3, crit: "PRON", title: "Nối âm", body: "Nối âm cuối với âm đầu để câu nói liền mạch hơn.", ease: 4 },
+  { level: 3, crit: "PRON", title: "Nhóm từ", body: "Chia câu thành các cụm ý ngắn, mỗi cụm một nhịp.", ease: 3 },
+  { level: 3, crit: "PRON", title: "Trọng âm từ", body: "Nhấn đúng âm tiết của từ để người nghe dễ hiểu.", ease: 3 },
 ];
 
 // Sắp theo tiêu chí (FC, LR, GRA, Pronunciation), trong mỗi tiêu chí sắp từ Basic đến Advanced
@@ -246,19 +259,6 @@ function stressNodes(text: string) {
       {seg}
     </span>
   ));
-}
-
-// Chữ trượt lên lần lượt, từng từ một
-function RiseText({ text, delay = 0 }: { text: string; delay?: number }) {
-  return (
-    <>
-      {text.split(" ").map((word, i) => (
-        <span key={i} className="note-rise inline-block" style={{ animationDelay: `${delay + i * 35}ms` }}>
-          {stressNodes(word)}&nbsp;
-        </span>
-      ))}
-    </>
-  );
 }
 
 // Hai câu mẫu cho mỗi tiêu chí, phần **in đậm** là chữ liên quan trực tiếp tới tiêu chí
@@ -410,30 +410,30 @@ function NoteContent({ index }: { index: number }) {
   return (
     <div className="relative z-10 flex h-full flex-col">
       <style>{`@keyframes note-slide-right { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } } .note-slide-right { opacity: 0; animation: note-slide-right 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }`}</style>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h4 className="note-rise text-[length:var(--fs-card)] font-bold" style={{ animationDelay: "240ms" }}>
+          {card.title}
+        </h4>
         <span
-          className="note-slide-right inline-block w-max rounded-md px-2 py-1 font-mono text-[length:var(--fs-tag)] font-bold uppercase tracking-[0.15em]"
-          style={{ backgroundColor: LEVEL_TINT[card.level].bg, color: LEVEL_TINT[card.level].fg }}
+          className="note-slide-right inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 font-mono text-[length:var(--fs-tag)] uppercase tracking-[0.2em] text-[#9a9a9a]"
+          style={{ animationDelay: "120ms" }}
         >
-          {LEVELS[card.level]}
-        </span>
-        <span className="note-slide-right font-mono text-[length:var(--fs-tag)] font-bold uppercase tracking-[0.2em]" style={{ color, animationDelay: "120ms" }}>
-          {card.crit}
+          <span className="font-bold" style={{ color }}>
+            {card.crit}
+          </span>
+          · <EaseStars ease={card.ease} />
         </span>
       </div>
-      <h4 className="note-rise mt-3 text-[length:var(--fs-card)] font-bold md:mt-[0.8vw]" style={{ animationDelay: "240ms" }}>
-        {card.title}
-      </h4>
-      <p className="mt-2 text-[length:var(--fs-text)] leading-snug text-[#1a1a1a] md:mt-[0.5vw]">
-        <RiseText text={card.note} delay={200} />
+      <p className="mt-2 text-[length:var(--fs-text)] leading-relaxed text-[#1a1a1a] md:mt-[0.5vw]">
+        {stressNodes(card.note)}
       </p>
       {EXAMPLES[card.title] && (
-        <div
-          className="note-rise mt-3 text-[length:var(--fs-text)] leading-relaxed text-justify text-[#1a1a1a] md:mt-[0.8vw]"
-          style={{ animationDelay: "520ms" }}
-        >
+        <hr className="my-2.5 border-0 border-t border-dashed border-[#1a1a1a]/30" />
+      )}
+      {EXAMPLES[card.title] && (
+        <div className="text-[length:var(--fs-text)] leading-relaxed text-justify text-[#1a1a1a]">
           {EXAMPLES[card.title].map((sentence, i) => (
-            <p key={i} className="mt-1 italic first:mt-0">
+            <p key={i} className="italic">
               {renderBold(sentence)}
             </p>
           ))}
@@ -604,44 +604,79 @@ const FOLD_CORNERS = [
 // Kích thước góc gấp (%), xoay vòng theo tab
 const FOLD_PCT = [12, 15, 18];
 
-// Chiều cao của ghim giấy (px)
+// Chiều cao của ghim giấy cũ (px), dùng để tính tâm nhãn Scan here
 const PIN_H = 24;
-// Khoảng cách cố định từ tâm hàng trên đến hai ghim (px)
+// Khoảng cách cố định từ tâm hàng trên đến hai nhãn (px)
 const PIN_UP_DESKTOP = 110;
 const PIN_DOWN_DESKTOP = 88;
 const PIN_UP_MOBILE = 100;
 const PIN_DOWN_MOBILE = 80;
+// Độ hạ của nhãn Scan here so với điểm giữa hai ghim cũ (px)
+const SCAN_SHIFT = 10;
 
-// Ghim giấy đỏ: đầu tròn có bóng và mũi kim. flip lật ngược để mũi kim chỉ lên.
-function PaperPin({ flip = false }: { flip?: boolean }) {
+// Mã vạch trang trí: các vạch dày mỏng ngẫu nhiên theo seed (cố định cho từng thẻ để không đổi giữa các lần render),
+// có vạch canh hai đầu như mã vạch thật
+const barcodeCache = new Map<number, { d: string; w: number }>();
+function barcode(seed: number) {
+  const hit = barcodeCache.get(seed);
+  if (hit) return hit;
+  let t = seed * 9301 + 49297;
+  const rand = () => {
+    t = (t + 0x6d2b79f5) | 0;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+  // Mỗi phần tử là [độ rộng vạch, độ rộng khoảng trắng sau vạch]
+  const bars: [number, number][] = [[1, 1], [1, 1]];
+  for (let i = 0; i < 22; i++) bars.push([1 + Math.floor(rand() * 3), 1 + Math.floor(rand() * 2)]);
+  bars.push([1, 1], [1, 0]);
+  let x = 0;
+  let d = "";
+  for (const [bw, gap] of bars) {
+    d += `M${x} 0h${bw}v10h-${bw}z`;
+    x += bw + gap;
+  }
+  const out = { d, w: x };
+  barcodeCache.set(seed, out);
+  return out;
+}
+
+function RandomBarcode({ seed }: { seed: number }) {
+  const { d, w } = barcode(seed);
   return (
     <svg
-      width="16"
-      height={PIN_H}
-      viewBox="0 0 16 24"
-      style={{ transform: flip ? "rotate(180deg)" : undefined, filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.25))" }}
+      viewBox={`0 0 ${w} 10`}
+      preserveAspectRatio="none"
+      className="pointer-events-none block h-[9.945px] w-full md:h-[0.718vw]"
+      shapeRendering="crispEdges"
       aria-hidden="true"
     >
-      <defs>
-        <radialGradient id={`pin-head-${flip ? "b" : "t"}`} cx="0.35" cy="0.3" r="0.7">
-          <stop offset="0" stopColor="#ffb3b3" />
-          <stop offset="0.5" stopColor={MARKER_COLOR} />
-          <stop offset="1" stopColor="#8f0d0d" />
-        </radialGradient>
-      </defs>
-      <line x1="8" y1="13" x2="8" y2="23" stroke="#9a9a9a" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="8" cy="7" r="6" fill={`url(#pin-head-${flip ? "b" : "t"})`} />
+      <path fill="#1a1a1a" d={d} />
     </svg>
+  );
+}
+
+// Chữ "Scan here" dọc màu đỏ, nằm dưới lớp thẻ, đánh dấu chỗ thẻ sẽ hiện ghi chú
+function ScanLabel() {
+  return (
+    <span
+      className="block font-mono text-[13.824px] font-bold uppercase tracking-[0.524em] md:text-[0.857vw]"
+      style={{ writingMode: "vertical-rl", color: MARKER_COLOR }}
+    >
+      Scan here
+    </span>
   );
 }
 
 export default function LearningSection() {
   const viewRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<HTMLDivElement>(null);
-  const markerBottomRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const linkRefs = useRef<(SVGPathElement | null)[]>([]);
   const dotRefs = useRef<(SVGCircleElement | null)[]>([]);
+  // Chiều rộng và chiều cao đã áp cho từng thẻ, để chỉ đo lại khi kích thước thật sự đổi
+  const cardSizes = useRef<{ w: number; h: number }[]>([]);
   const beeRef = useRef<HTMLDivElement>(null);
   // Quãng đã kéo, đơn vị px, không giới hạn
   const offset = useRef(0);
@@ -664,14 +699,33 @@ export default function LearningSection() {
     const isMobile = window.innerWidth < MOBILE_BP;
     const { placed, cw, topY } = layoutBelt(offset.current, W, H, isMobile);
 
+    // Phóng thẻ bằng CSS zoom thay cho transform scale để chữ được vẽ ở kích thước thật, không bị nhòe.
+    // Kích thước chỉ ghi khi đổi (thẻ chuyển hàng hoặc đổi cỡ màn hình), nên lúc kéo mỗi khung hình chỉ còn đổi transform.
+    const sizes = cardSizes.current;
+    const changed: number[] = [];
     placed.forEach((p, k) => {
       const node = cardRefs.current[k];
       if (!node) return;
       const s = p.top ? TOP_SCALE : BOTTOM_SCALE;
-      node.style.width = `${cw}px`;
-      // Di chuyển bằng transform (không đổi left/top) để trình duyệt chỉ cần composite, không tính lại bố cục
-      node.style.transform = `translate3d(${p.cx - cw / 2}px, ${p.cy}px, 0) translateY(-50%) scale(${s})`;
+      const w = cw * s;
+      if (sizes[k]?.w !== w) {
+        node.style.width = `${w}px`;
+        (node.firstElementChild as HTMLElement | null)?.style.setProperty("zoom", String(s));
+        sizes[k] = { w, h: 0 };
+        changed.push(k);
+      }
       node.style.opacity = p.top ? "1" : isMobile ? "0" : String(BOTTOM_OPACITY);
+    });
+    changed.forEach((k) => {
+      sizes[k].h = cardRefs.current[k]?.offsetHeight ?? 0;
+    });
+    // Làm tròn theo điểm ảnh thật của màn hình để chữ khớp lưới mà chuyển động vẫn mịn
+    const dpr = window.devicePixelRatio || 1;
+    const snap = (v: number) => Math.round(v * dpr) / dpr;
+    placed.forEach((p, k) => {
+      const node = cardRefs.current[k];
+      if (!node || !sizes[k]) return;
+      node.style.transform = `translate3d(${snap(p.cx - sizes[k].w / 2)}px, ${snap(p.cy - sizes[k].h / 2)}px, 0)`;
     });
 
     // Dây nối từng cặp thẻ liền kề, kể cả chỗ nối hai hàng và mối khép vòng
@@ -712,8 +766,10 @@ export default function LearningSection() {
     // Hai ghim cố định theo hàng trên, không phụ thuộc vào thẻ đang nằm dưới
     if (best > cw / 2) active = -1;
     const viewTop = view.offsetTop;
-    if (markerRef.current) markerRef.current.style.transform = `translate3d(0, ${viewTop + topY - (isMobile ? PIN_UP_MOBILE : PIN_UP_DESKTOP)}px, 0)`;
-    if (markerBottomRef.current) markerBottomRef.current.style.transform = `translate3d(0, ${viewTop + topY + (isMobile ? PIN_DOWN_MOBILE : PIN_DOWN_DESKTOP)}px, 0)`;
+    // Nhãn Scan here đặt chính giữa hai vị trí ghim cũ, hạ thêm SCAN_SHIFT px
+    const pinUp = isMobile ? PIN_UP_MOBILE : PIN_UP_DESKTOP;
+    const pinDown = isMobile ? PIN_DOWN_MOBILE : PIN_DOWN_DESKTOP;
+    if (markerRef.current) markerRef.current.style.transform = `translate3d(0, ${viewTop + topY + (pinDown - pinUp + PIN_H) / 2 + SCAN_SHIFT}px, 0)`;
 
     if (active !== activeRef.current) {
       activeRef.current = active;
@@ -759,10 +815,16 @@ export default function LearningSection() {
     }
     const onChange = () => {
       setMobile(media.matches);
+      cardSizes.current = [];
       apply();
     };
-    const onResize = () => apply();
+    const onResize = () => {
+      cardSizes.current = [];
+      apply();
+    };
     onChange();
+    // Font tải xong có thể đổi chiều cao thẻ, đo lại một lần
+    document.fonts?.ready.then(onResize);
     media.addEventListener("change", onChange);
     window.addEventListener("resize", onResize);
     return () => {
@@ -962,7 +1024,6 @@ export default function LearningSection() {
             style={{ touchAction: "pan-y" }}
           >
             {CARDS.map((cd, k) => {
-              const tint = LEVEL_TINT[cd.level];
               const color = CRIT_COLOR[cd.crit];
               return (
                 <div
@@ -979,34 +1040,33 @@ export default function LearningSection() {
                       opacity: inView ? 1 : 0,
                       transform: inView ? "none" : `translate3d(0, ${ENTER_OFFSET_Y}px, 0)`,
                       transition: `opacity ${Math.round(ENTER_MS * 0.8)}ms cubic-bezier(.22,1,.36,1) ${k * ENTER_STAGGER_MS}ms, transform ${ENTER_MS}ms cubic-bezier(.22,1,.36,1) ${k * ENTER_STAGGER_MS}ms`,
-                      willChange: "transform, opacity",
                       // Cắt góc tờ giấy; bóng đổ được vẽ ở lớp ngoài để không bị cắt theo
                       clipPath: FOLD_CORNERS[k % 4].cut(FOLD_PCT[k % 3]),
                     }}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span
-                        className="min-w-0 break-words rounded px-1 py-0.5 font-mono text-[7.5px] uppercase leading-tight tracking-[0.1em] md:px-1.5 md:text-[0.5vw] md:tracking-[0.2em]"
-                        style={{ backgroundColor: tint.bg, color: tint.fg }}
-                      >
-                        {LEVELS[cd.level].toUpperCase()}
-                      </span>
+                      <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#9a9a9a] md:text-[0.5vw] md:tracking-[0.2em]">
+                        <span className="font-bold" style={{ color }}>
+                          {cd.crit}
+                        </span>{" "}
+                        · <EaseStars ease={cd.ease} />
+                      </p>
                       <span className="font-mono text-[9px] text-[#9a9a9a] md:text-[0.55vw]">
                         {String(k + 1).padStart(2, "0")}
                       </span>
                     </div>
 
-                    <div className="mt-2 flex flex-col md:mt-[1.6vw]">
+                    <div className="mt-1.5 flex flex-col md:mt-[0.6vw]">
                       <h3 className="text-[12.5px] font-bold leading-snug md:text-[0.78vw]">{cd.title}</h3>
                       <p className="mt-1 text-[10px] leading-snug text-[#1a1a1a]/65 md:mt-[0.5vw] md:text-[0.7vw]">{cd.body}</p>
                     </div>
 
-                    <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.1em] text-[#9a9a9a] md:mt-[1vw] md:text-[0.5vw] md:tracking-[0.2em]">
-                      <span className="font-bold" style={{ color }}>
-                        {cd.crit}
-                      </span>{" "}
-                      · {EASE_LABEL[cd.ease]}
-                    </p>
+                    <div className="mt-2 flex justify-end md:mt-[0.8vw]">
+                      <div className="w-[40%] opacity-85">
+                        <RandomBarcode seed={k + 1} />
+                      </div>
+                    </div>
+
                     {/* Lớp nhiễu mịn và vài nếp nhăn nhẹ, tạo cảm giác giấy thật */}
                     <div
                       className="pointer-events-none absolute inset-0 rounded-[3px]"
@@ -1039,20 +1099,13 @@ export default function LearningSection() {
             </svg>
           </div>
 
-          {/* Ghim giấy đỏ cố định ở 45% chiều ngang, nằm ngoài khung dây để không bị cắt */}
+          {/* Chữ Scan here cố định ở 45% chiều ngang, nằm dưới lớp thẻ, giữa hai vị trí ghim cũ */}
           <div
             ref={markerRef}
-            className="pointer-events-none absolute left-0 top-0 z-30 -translate-x-1/2 will-change-transform"
+            className="pointer-events-none absolute left-0 top-0 z-0 -translate-x-1/2 -translate-y-1/2 will-change-transform"
             style={{ left: `${MARKER_X * 100}%`, top: 0 }}
           >
-            <PaperPin />
-          </div>
-          <div
-            ref={markerBottomRef}
-            className="pointer-events-none absolute left-0 top-0 z-30 -translate-x-1/2 will-change-transform"
-            style={{ left: `${MARKER_X * 100}%`, top: 0 }}
-          >
-            <PaperPin flip />
+            <ScanLabel />
           </div>
 
           <div
