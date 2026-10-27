@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import dynamic from "next/dynamic";
+
+// Three.js chỉ chạy trên trình duyệt
+const WireGlobe = dynamic(() => import("./WireGlobe"), { ssr: false });
 
 type Skill = { name: string; score: string; highlight?: boolean };
 type Exam = {
@@ -68,42 +72,34 @@ const EXAMS: Exam[] = [
   },
 ];
 
-const GAP = 24;
-const SPACING = 1.0;
-const DRAG_SENSITIVITY = 2.5;
-const WHEEL_SENSITIVITY = 2.0;
-const DRAG_RESPONSE = 1.5;
-const SNAP_RESPONSE = 3;
-const WHEEL_SETTLE_MS = 160;
-const SIDE_SCALE = 0.86;
-const SIDE_VEIL = 0.6;
-const YAW_DEG = -10;
-const PERSPECTIVE = 900;
-const EPS = 0.0005;
+// Quỹ đạo: bán kính ngang tối đa (px), bán kính sâu (px), độ nghiêng theo chiều sâu
+const ORBIT_RX_RATIO = 0.36; // theo chiều rộng màn hình
+const ORBIT_RX_MAX = 420;
+const ORBIT_RZ = 220;
+const ORBIT_TILT = 0.18;
+const PERSPECTIVE = 2000;
+const BACK_OPACITY = 0.3; // thẻ ở phía sau mờ tới mức này
+
+// Quả cầu ở giữa
+const PLANET_PX = 280;
+
+// Chuyển động
+const TAU = Math.PI * 2;
+const STEP = TAU / EXAMS.length;
+const AUTO_SPEED = 0.18; // rad/s, tự quay sang phải khi không tương tác
+const RESUME_LERP = 1.2; // tốc độ trở về quay tự động sau khi thả tay (1/s)
+const DRAG_RAD_PER_PX = 0.008;
+const WHEEL_RAD_PER_PX = 0.0015;
 
 // Hiệu ứng xuất hiện
 const ENTER_MS = 1100;
-const ENTER_OFFSET_Y = 80; // thẻ giữa trồi từ dưới lên (px)
-const ENTER_OFFSET_X = 140; // thẻ hai bên trượt từ ngoài vào (px)
-
-const wrapDistance = (d: number, n: number) => {
-  let x = ((d % n) + n) % n;
-  if (x > n / 2) x -= n;
-  return x;
-};
-
-// Vị trí ẩn ban đầu của từng thẻ theo hướng xuất hiện
-const hiddenTransform = (dir: "rise" | "left" | "right") => {
-  if (dir === "rise") return `translate3d(0, ${ENTER_OFFSET_Y}px, 0)`;
-  if (dir === "left") return `translate3d(-${ENTER_OFFSET_X}px, 0, 0)`;
-  return `translate3d(${ENTER_OFFSET_X}px, 0, 0)`;
-};
+const ENTER_OFFSET_Y = 60; // cả cụm trồi từ dưới lên (px)
 
 function ExamCard({ exam }: { exam: Exam }) {
   const placeColor = PLACE_COLORS[exam.place] ?? "text-[#1a1a1a]";
 
   return (
-    <div className="w-full overflow-hidden rounded-2xl border border-[#1a1a1a]/15 bg-white shadow-[0_12px_30px_-18px_rgba(0,0,0,0.15)]">
+    <div className="w-full overflow-hidden rounded-2xl border border-[#1a1a1a]/15 bg-white/70 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.15)] backdrop-blur-sm">
       <div className="flex items-end justify-between gap-6 border-b border-[#1a1a1a]/10 px-6 pb-5 pt-6">
         <h3 className="text-2xl font-semibold text-[#d62828]">Overall {exam.overall}</h3>
 
@@ -139,9 +135,9 @@ function ExamCard({ exam }: { exam: Exam }) {
 
 export default function IeltsOverview() {
   const sectionRef = useRef<HTMLElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const veilRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const spinRef = useRef(0); // góc quay hiện tại, quả cầu đọc giá trị này
 
   // Trạng thái xuất hiện: đổi bằng React state, không thao tác classList
   const [inView, setInView] = useState(false);
@@ -172,197 +168,141 @@ export default function IeltsOverview() {
     return () => io.disconnect();
   }, []);
 
-  // Carousel: kéo, lăn ngang, độ mờ và góc xoay
+  // Quỹ đạo 3D: quả cầu ở giữa, các thẻ chạy quanh theo vòng tròn
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
+    const stage = stageRef.current;
+    if (!stage) return;
 
     const cards = cardRefs.current;
-    const veils = veilRefs.current;
-    const n = EXAMS.length;
 
-    let target = 0;
-    let shown = 0;
+    let rx = Math.min(window.innerWidth * ORBIT_RX_RATIO, ORBIT_RX_MAX);
+    let angle = 0; // góc của thẻ đầu tiên (thẻ gần nhất), tăng = quay sang phải
+    let vel = AUTO_SPEED; // rad/s
+    let dragging = false;
+    let startX = 0;
+    let startAngle = 0;
+    let lastX = 0;
+    let lastT = 0;
     let last = performance.now();
     let frame = 0;
-    let running = false;
-    const lastStyle: string[] = new Array(n).fill("");
 
-    let dragging = false;
-    let moved = false;
-    let startX = 0;
-    let startPos = 0;
-    let wheelTimer = 0;
-
-    const getStep = () => ((cards[0]?.offsetWidth ?? 400) + GAP) * SPACING;
-
-    const kick = () => {
-      if (!running) {
-        running = true;
-        last = performance.now();
-        frame = requestAnimationFrame(render);
-      }
-    };
-
-    const snap = () => {
-      target = Math.round(target);
-      kick();
+    const onResize = () => {
+      rx = Math.min(window.innerWidth * ORBIT_RX_RATIO, ORBIT_RX_MAX);
     };
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
       dragging = true;
-      moved = false;
       startX = e.clientX;
-      startPos = target;
-      track.style.cursor = "grabbing";
-      kick();
+      startAngle = angle;
+      lastX = e.clientX;
+      lastT = performance.now();
+      stage.style.cursor = "grabbing";
     };
 
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
-      const dx = e.clientX - startX;
-      if (Math.abs(dx) > 5) moved = true;
-      target = startPos - (dx * DRAG_SENSITIVITY) / getStep();
-      kick();
+      const now = performance.now();
+      const dt = Math.max((now - lastT) / 1000, 0.001);
+      angle = startAngle + (e.clientX - startX) * DRAG_RAD_PER_PX;
+      // Ghi nhận vận tốc để khi thả tay vòng quay đi tiếp rồi mới chậm dần
+      vel = ((e.clientX - lastX) * DRAG_RAD_PER_PX) / dt;
+      lastX = e.clientX;
+      lastT = now;
     };
 
     const onUp = () => {
       if (!dragging) return;
       dragging = false;
-      track.style.cursor = "";
-      snap();
+      stage.style.cursor = "";
     };
 
     const onWheel = (e: WheelEvent) => {
       const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
       if (!horizontal) return;
       e.preventDefault();
-      e.stopPropagation();
-      const delta = e.deltaX || e.deltaY;
-      target += (delta * WHEEL_SENSITIVITY) / getStep();
-      window.clearTimeout(wheelTimer);
-      wheelTimer = window.setTimeout(snap, WHEEL_SETTLE_MS);
-      kick();
-    };
-
-    const onClick = (e: MouseEvent) => {
-      if (moved) {
-        e.preventDefault();
-        e.stopPropagation();
-        moved = false;
-        return;
-      }
-      const card = (e.target as HTMLElement).closest<HTMLElement>("[data-idx]");
-      if (!card) return;
-      const idx = Number(card.dataset.idx);
-      const d = wrapDistance(idx - shown, n);
-      if (Math.abs(d) > 0.5) {
-        e.preventDefault();
-        e.stopPropagation();
-        target = Math.round(shown + d);
-        kick();
-      }
+      angle += (e.deltaX || e.deltaY) * WHEEL_RAD_PER_PX;
     };
 
     const render = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
 
-      const k = dragging ? DRAG_RESPONSE : SNAP_RESPONSE;
-      shown += (target - shown) * (1 - Math.exp(-k * dt));
-      if (Math.abs(target - shown) < EPS) shown = target;
+      // Khi không kéo: vận tốc dần về tốc độ tự quay sang phải
+      if (!dragging) {
+        vel += (AUTO_SPEED - vel) * (1 - Math.exp(-RESUME_LERP * dt));
+        angle += vel * dt;
+      }
+      angle %= TAU;
 
       cards.forEach((el, i) => {
         if (!el) return;
-        const d = wrapDistance(i - shown, n);
-        const a = Math.min(Math.abs(d), 1);
-        const scale = SIDE_SCALE + (1 - SIDE_SCALE) * (1 - a);
-        const veil = a * SIDE_VEIL;
-        const yaw = -Math.max(-1, Math.min(1, d)) * YAW_DEG;
-        const visible = Math.abs(d) < 1.5;
-        const z = Math.round(100 - a * 50);
-
-        const transform = `translate3d(calc(${d.toFixed(4)} * (var(--cw) + ${GAP}px) * ${SPACING}), 0, 0) rotateY(${yaw.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
-        const key = `${transform}|${veil.toFixed(3)}|${visible}|${z}`;
-
-        if (key !== lastStyle[i]) {
-          lastStyle[i] = key;
-          el.style.transform = transform;
-          el.style.opacity = visible ? "1" : "0";
-          el.style.pointerEvents = visible ? "auto" : "none";
-          el.style.zIndex = String(z);
-          if (veils[i]) veils[i]!.style.opacity = veil.toFixed(3);
-        }
+        const th = angle + i * STEP;
+        const x = rx * Math.sin(th);
+        const z = ORBIT_RZ * Math.cos(th);
+        const y = z * ORBIT_TILT;
+        const depth = (z + ORBIT_RZ) / (2 * ORBIT_RZ); // 0 phía sau, 1 phía trước
+        el.style.transform = `translate3d(-50%, -50%, 0) translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, ${z.toFixed(2)}px)`;
+        el.style.opacity = (BACK_OPACITY + (1 - BACK_OPACITY) * depth).toFixed(3);
+        el.style.zIndex = String(500 + Math.round(z));
       });
 
-      const settled = !dragging && Math.abs(target - shown) < EPS;
-      if (settled) {
-        running = false;
-        return;
-      }
+      spinRef.current = angle;
+
       frame = requestAnimationFrame(render);
     };
 
-    track.addEventListener("pointerdown", onDown);
+    window.addEventListener("resize", onResize);
+    stage.addEventListener("pointerdown", onDown);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-    track.addEventListener("wheel", onWheel, { passive: false });
-    track.addEventListener("click", onClick, true);
-    kick();
+    stage.addEventListener("wheel", onWheel, { passive: false });
+    frame = requestAnimationFrame(render);
 
     return () => {
       cancelAnimationFrame(frame);
-      window.clearTimeout(wheelTimer);
-      track.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("resize", onResize);
+      stage.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
-      track.removeEventListener("wheel", onWheel);
-      track.removeEventListener("click", onClick, true);
+      stage.removeEventListener("wheel", onWheel);
     };
   }, []);
+
+  const enterStyle: CSSProperties = {
+    opacity: inView ? 1 : 0,
+    transform: inView ? "none" : `translate3d(0, ${ENTER_OFFSET_Y}px, 0)`,
+    transition: `opacity ${Math.round(ENTER_MS * 0.8)}ms cubic-bezier(.22,1,.36,1), transform ${ENTER_MS}ms cubic-bezier(.22,1,.36,1)`,
+  };
 
   return (
     <section ref={sectionRef} id="overview" className="overflow-hidden bg-white py-16 text-[#1a1a1a]">
       <div
-        ref={trackRef}
-        className="mx-auto grid w-full cursor-grab select-none place-items-center"
-        style={{ "--cw": "min(476px, 72.25vw)", perspective: `${PERSPECTIVE}px` } as CSSProperties}
+        ref={stageRef}
+        className="relative mx-auto h-[min(90vh,820px)] w-full cursor-grab select-none touch-pan-y"
+        style={{ perspective: `${PERSPECTIVE}px`, ...enterStyle }}
       >
-        {EXAMS.map((exam, i) => {
-          const dir: "rise" | "left" | "right" = i === 0 ? "rise" : wrapDistance(i, EXAMS.length) > 0 ? "right" : "left";
-          const delay = i === 0 ? 150 : 0;
+        {/* Quả cầu lưới ở giữa */}
+        <div
+          className="absolute left-1/2 top-1/2"
+          style={{ transform: "translate(-50%, -50%)", zIndex: 500 }}
+        >
+          <WireGlobe spinRef={spinRef} size={PLANET_PX} />
+        </div>
 
-          // Hiệu ứng xuất hiện nằm ở lớp bên trong, tách khỏi lớp mà JS điều khiển vị trí khi cuộn
-          const enterStyle: CSSProperties = {
-            opacity: inView ? 1 : 0,
-            transform: inView ? "none" : hiddenTransform(dir),
-            transition: `opacity ${Math.round(ENTER_MS * 0.8)}ms cubic-bezier(.22,1,.36,1) ${delay}ms, transform ${ENTER_MS}ms cubic-bezier(.22,1,.36,1) ${delay}ms`,
-            willChange: "transform, opacity",
-          };
-
-          return (
-            <div
-              key={`${exam.date}-${i}`}
-              data-idx={i}
-              ref={(el) => {
-                cardRefs.current[i] = el;
-              }}
-              style={{ gridArea: "1 / 1", width: "var(--cw)", transformOrigin: "center center" }}
-            >
-              <div className="relative" style={enterStyle}>
-                <ExamCard exam={exam} />
-                <div
-                  ref={(el) => {
-                    veilRefs.current[i] = el;
-                  }}
-                  className="pointer-events-none absolute inset-0 rounded-2xl bg-white"
-                  style={{ opacity: 0 }}
-                />
-              </div>
-            </div>
-          );
-        })}
+        {/* Bốn thẻ điểm chạy quanh quả cầu */}
+        {EXAMS.map((exam, i) => (
+          <div
+            key={`${exam.date}-${i}`}
+            ref={(el) => {
+              cardRefs.current[i] = el;
+            }}
+            className="absolute left-1/2 top-1/2 w-[min(320px,80vw)]"
+            style={{ willChange: "transform, opacity" }}
+          >
+            <ExamCard exam={exam} />
+          </div>
+        ))}
       </div>
     </section>
   );
