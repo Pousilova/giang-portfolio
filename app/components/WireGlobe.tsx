@@ -12,7 +12,7 @@ const PLANET_OPACITY = 0.2; // trong suốt 80%
 const PLANET_BODY_COLOR = "#ffffff"; // thân hành tinh màu trắng đục
 const PLANET_BODY_OPACITY = 0.4; // trong suốt 60%
 const CAMERA_Z = 8.35; // giữ kích thước hành tinh khi khung canvas lớn hơn
-const BACKDROP_H = 5; // chiều cao ảnh nền trong cảnh 3D (đơn vị hành tinh)
+const BACKDROP_H = 3.9; // giảm khoảng 23% so với trước // chiều cao ảnh nền trong cảnh 3D (đơn vị hành tinh)
 const GRID_MERIDIANS = 16; // số đường kinh tuyến
 const GRID_PARALLELS = 9; // số đường vĩ tuyến
 const GRID_SEGMENTS = 64; // số đoạn thẳng cho mỗi đường tròn
@@ -113,11 +113,36 @@ function Backdrop({ src }: { src: string }) {
   const image = texture.image as HTMLImageElement;
   const aspect = image.width / image.height;
 
+  // Bóng đổ: bản làm mờ, tô màu xanh đậm của ảnh, rồi lệch xuống dưới và sang phải
+  const shadowTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.filter = `blur(${Math.round(image.width * 0.026)}px)`;
+    ctx.drawImage(image, 0, 0);
+    ctx.filter = "none";
+    ctx.globalCompositeOperation = "source-in";
+    ctx.fillStyle = "rgba(20, 60, 60, 0.35)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return new THREE.CanvasTexture(canvas);
+  }, [image]);
+
   return (
-    <mesh renderOrder={1} scale={[BACKDROP_H * aspect, BACKDROP_H, 1]}>
-      <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial map={texture} transparent depthWrite={false} />
-    </mesh>
+    <>
+      {shadowTexture && (
+        <mesh position={[0, -0.08, -0.02]} renderOrder={0} scale={[BACKDROP_H * aspect * 1.02, BACKDROP_H * 1.02, 1]}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial map={shadowTexture} transparent depthWrite={false} />
+        </mesh>
+      )}
+
+      <mesh renderOrder={1} scale={[BACKDROP_H * aspect, BACKDROP_H, 1]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={texture} transparent depthWrite={false} />
+      </mesh>
+    </>
   );
 }
 

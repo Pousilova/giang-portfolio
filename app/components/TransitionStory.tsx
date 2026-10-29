@@ -10,17 +10,17 @@ const STEPS = [
   {
     label: "Nói theo bản năng",
     body:
-      "A real business challenge: redesigning the journey of a car comparison platform, from discovery to qualified booking. The project explored how UX research and design could support complex purchase decisions.",
-    meta: "UX Design Executive Course · POLI.design × DriveK",
+      "Lời khuyên \"cứ nói tự nhiên như là đang nói chuyện với một người bạn\" - IELTS Advantage, là lời khuyên gây lú nhất mình từng biết. Bản thân mình trong tiếng việt cũng nói chuyện với bạn bè một cách tùy hứng là chủ yếu, vì niềm tin vào một thứ bản thân mình không hiểu mà mình không hề chuẩn bị gì trong hai lần thi IELTS Speaking đầu tiên, hệ quả là lụm hai con 6.5 cùi mía. Đây là từ một người có background từ vựng ngữ pháp tương đối ổn ở thời điểm đó. Việc cặp vào nách một vài chiến lược và nắm rõ các tiêu chí chấm điểm đã giúp mình bật band trong chỉ vỏn vẹn 2 tháng.",
+    meta: "IELTS Speaking · Kinh nghiệm cá nhân",
   },
   {
     label: "Nói that's everything khi chưa tới ngưỡng 2 phút",
-    body: "Nội dung placeholder cho mục này. Bạn thay bằng đoạn mô tả thật về cách mình xử lý khi chưa đủ thời gian trả lời.",
-    meta: "Placeholder",
+    body: "Part 2 là long turn, chủ yếu đánh giá khả năng kể một câu chuyện dài, liền mạch, có đầu đuôi. Thường giám khảo sẽ chủ động nhắc bạn nói tiếp khi bạn ngừng nhưng vẫn chưa hết thời gian. Việc nói \"that's everything\" hoặc \"that's all\" vô tình khiến giám khảo chẳng buồn nhắc nữa, ít nhiều sẽ ảnh hưởng tới kết quả sau cùng. Với kinh nghiệm của mình, tuyệt đối không nên nói hai cụm này.",
+    meta: "IELTS Speaking · Long Turn",
   },
   {
     label: "Không dùng signposts và linkers",
-    body: "Không có từ nối, bài nói nghe như một danh sách câu rời rạc và giám khảo khó theo dõi. Để đạt band 7 trở lên về Fluency and Coherence, cần dùng đều signposts và linkers để dẫn dắt từng ý trong bài 2 phút.",
+    body: "Không có từ nối, đặc biệt là trong Part 2, sẽ làm bài nói nghe như một danh sách câu rời rạc và khiến giám khảo khó theo dõi. Để đạt band 7 trở lên về Fluency and Coherence, cần dùng đều signposts và linkers để dẫn dắt từng ý trong phần trả lời 2 phút.",
     meta: "IELTS Speaking · Fluency and Coherence",
   },
 ];
@@ -288,7 +288,6 @@ export default function TransitionStory() {
                           <p className="mt-4 lg:max-w-md text-[length:var(--fs-text)] leading-relaxed text-justify text-[#1a1a1a]">
                             {step.body}
                           </p>
-                          <p className="mt-3 font-mono text-[length:var(--fs-tag)] text-[#9a9a9a]">{step.meta}</p>
                         </div>
                       </div>
                       {i === active && i < N - 1 && (
