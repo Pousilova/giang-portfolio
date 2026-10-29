@@ -15,6 +15,10 @@ const STEP_VW = 15;
 // Trên mobile hiển thị khoảng 3 thẻ trên một hàng
 const CARD_PX = 118;
 const STEP_PX = 162;
+// Tablet (768px đến dưới 1024px): thẻ đo theo vw nên quá nhỏ. Phóng cả thẻ lẫn khoảng cách
+// để thẻ có kích thước như khi xem trên màn rộng TABLET_REF_W px.
+const TABLET_BP = 1024;
+const TABLET_REF_W = 1250;
 const MOBILE_BP = 768;
 const EDGE_WIDTH = "8vw";
 // Chiều cao ước lượng của thẻ trên mobile và chiều cao khung chứa hai hàng
@@ -224,8 +228,10 @@ type Placed = { cx: number; cy: number; top: boolean };
 // Hàng trên chạy từ trái sang phải (thẻ 1 -> 15), quặt xuống rồi hàng dưới chạy ngược lại (16 -> 29),
 // và thẻ 29 nối lại với thẻ 1 ở mép trái ngoài khung nhìn.
 function layoutBelt(offset: number, W: number, H: number, mobile: boolean) {
-  const cw = mobile ? CARD_PX : (CARD_VW * W) / 100;
-  const step = mobile ? STEP_PX : (STEP_VW * W) / 100;
+  const vw = window.innerWidth;
+  const zoom = !mobile && vw < TABLET_BP ? TABLET_REF_W / vw : 1;
+  const cw = mobile ? CARD_PX : (CARD_VW * W * zoom) / 100;
+  const step = mobile ? STEP_PX : (STEP_VW * W * zoom) / 100;
   const base: number[] = [];
   let total = 0;
   for (let k = 0; k < N; k++) {
@@ -248,7 +254,7 @@ function layoutBelt(offset: number, W: number, H: number, mobile: boolean) {
     const xc = top ? x0 + u + cw / 2 : x0 + total - u - cw / 2;
     return { cx: xc, cy: top ? topY : bottomY, top };
   });
-  return { placed, cw, total, x0, topY };
+  return { placed, cw, total, x0, topY, zoom };
 }
 
 // Dấu nhấn kiểu từ điển: ký tự ^ đánh dấu âm tiết trọng âm, hiển thị thành dấu ' đỏ đậm
@@ -697,7 +703,7 @@ export default function LearningSection() {
     const W = view.clientWidth;
     const H = view.clientHeight;
     const isMobile = window.innerWidth < MOBILE_BP;
-    const { placed, cw, topY } = layoutBelt(offset.current, W, H, isMobile);
+    const { placed, cw, topY, zoom } = layoutBelt(offset.current, W, H, isMobile);
 
     // Phóng thẻ bằng CSS zoom thay cho transform scale để chữ được vẽ ở kích thước thật, không bị nhòe.
     // Kích thước chỉ ghi khi đổi (thẻ chuyển hàng hoặc đổi cỡ màn hình), nên lúc kéo mỗi khung hình chỉ còn đổi transform.
@@ -710,7 +716,7 @@ export default function LearningSection() {
       const w = cw * s;
       if (sizes[k]?.w !== w) {
         node.style.width = `${w}px`;
-        (node.firstElementChild as HTMLElement | null)?.style.setProperty("zoom", String(s));
+        (node.firstElementChild as HTMLElement | null)?.style.setProperty("zoom", String(s * zoom));
         sizes[k] = { w, h: 0 };
         changed.push(k);
       }

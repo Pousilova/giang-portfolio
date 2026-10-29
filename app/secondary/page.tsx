@@ -1,10 +1,13 @@
 import SmoothScroll from "../components/SmoothScroll";
 import TransitionStory from "../components/TransitionStory";
-import SnapToSection from "../components/SnapToSection";
 import StickyHeader from "../components/StickyHeader";
+
+// Tạm tắt grain để kiểm tra lỗi cuộn bị nhảy trên MacBook; đổi thành true để bật lại
+const GRAIN_ON = true;
 
 // Lớp hạt phim (grain) dùng chung cho hero và section chuyển cảnh
 function Grain() {
+  if (!GRAIN_ON) return null;
   return (
     <div
       aria-hidden="true"
@@ -21,7 +24,6 @@ function Grain() {
 export default function SecondaryPage() {
   return (
     <SmoothScroll>
-    <SnapToSection targetId="story-transition" />
     <main
       className="relative min-h-screen text-[#f4f8e4]"
       style={{
