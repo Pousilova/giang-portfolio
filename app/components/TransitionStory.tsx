@@ -25,7 +25,7 @@ const STEPS = [
   },
 ];
 
-const TITLE = ["Những gì sẽ khiến bạn", "kẹt band 6.5 Speaking"];
+const TITLE = ["Những gì sẽ khiến bạn kẹt band 6.5 Speaking"];
 
 const CUE_CARD = {
   title: "Describe a small business that you would like to open.",
@@ -65,6 +65,9 @@ const N = STEPS.length;
 const UNITS = N + INTRO_HOLD;
 const TOTAL_VH = TRANS_RANGE + UNITS * STEP_VH;
 const T_END = TRANS_RANGE / TOTAL_VH;
+// Trên Mac, trackpad đẩy qua các nội dung quá nhanh: kéo dài quãng cuộn để nội dung đổi chậm hơn
+// (0.8 rồi chậm thêm 50% => còn 0.4 tốc độ gốc)
+const MAC_SLOW = 1 / 0.4;
 const COLUMN_H = "h-[46svh] md:h-[38vh] lg:h-[min(70vh,560px)]";
 
 const clamp = (v: number, min = 0, max = 1) => Math.min(Math.max(v, min), max);
@@ -124,6 +127,8 @@ export default function TransitionStory() {
   const dotRef = useRef<HTMLDivElement>(null);
   // -1: chưa mục nào được mở, chỉ hiện mũi tên nối từ tiêu đề tới mục đầu tiên
   const [active, setActive] = useState(-1);
+  // Hệ số kéo dài quãng cuộn, chỉ đổi sau khi mount để không lệch với HTML render từ server
+  const [stretch, setStretch] = useState(1);
 
   // Tiến độ trong các nội dung story (0 - 1), suy ra trực tiếp từ vị trí cuộn
   const progressOf = (section: HTMLElement) => {
@@ -140,6 +145,12 @@ export default function TransitionStory() {
     const top = section.getBoundingClientRect().top + window.scrollY;
     return top + (T_END + ((i + INTRO_HOLD + 0.5) / UNITS) * (1 - T_END)) * total;
   };
+
+  useEffect(() => {
+    const isMac = /Mac/.test(navigator.platform || navigator.userAgent) && navigator.maxTouchPoints <= 1;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ đọc được nền tảng trên trình duyệt
+    if (isMac) setStretch(MAC_SLOW);
+  }, []);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -198,7 +209,7 @@ export default function TransitionStory() {
   const s3 = active === 2;
 
   return (
-    <section ref={sectionRef} style={{ height: `${100 + TOTAL_VH}vh` }} className="relative bg-white text-[#1a1a1a]">
+    <section ref={sectionRef} style={{ height: `${100 + TOTAL_VH * stretch}vh` }} className="relative bg-white text-[#1a1a1a]">
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
         {/* ===== Chỉ báo tiến độ: con ong bay theo đường chữ S, chỉ hiện trong story ===== */}
         <div
@@ -214,12 +225,22 @@ export default function TransitionStory() {
           className="absolute inset-0 flex items-start justify-center pt-[10svh] md:items-center md:pt-0"
           style={{ opacity: 1 }}
         >
-          <div className="grid w-[90vw] items-center gap-6 lg:w-[60vw] lg:grid-cols-2 lg:gap-[13.2rem]">
+          <div className="grid w-[90vw] items-center gap-6 lg:w-[70vw] lg:grid-cols-2 lg:gap-[6rem]">
             <div className="grid gap-6 md:gap-6">
               <h2 className="font-serif text-[7.5vw] font-bold italic leading-[1.25] md:text-[length:var(--fs-title)] lg:text-[30px] tracking-tight md:leading-[1.3]">
                 {TITLE.map((line) => (
-                  <span key={line} className="block whitespace-nowrap md:max-lg:inline md:whitespace-normal">
-                    {line}{" "}
+                  <span key={line} className="block">
+                    {/* Số 6.5 nghiêng nên trông cách xa chữ "band": kéo sát lại một chút */}
+                    {line.split("6.5").map((part, i) =>
+                      i === 0 ? (
+                        part
+                      ) : (
+                        <span key={i}>
+                          <span className="ml-[-0.08em]">6.5</span>
+                          {part}
+                        </span>
+                      )
+                    )}{" "}
                   </span>
                 ))}
               </h2>
@@ -289,13 +310,13 @@ export default function TransitionStory() {
                   <img
                     src="/images/bandstuck.png"
                     alt=""
-                    className="h-full w-auto object-contain [filter:drop-shadow(0_1.5vh_1.2vh_rgba(20,60,60,0.3))]"
+                    className="relative z-10 h-full w-auto object-contain [filter:drop-shadow(0_1.5vh_1.2vh_rgba(20,60,60,0.3))]"
                   />
                   {/* Số 6.5 3D màu đỏ, nghiêng về bên trái, đứng bên phải nhân vật */}
                   <span
-                    className="absolute left-[78%] top-0 whitespace-nowrap font-sans text-[30vh] font-black leading-none text-[#d62828]"
+                    className="absolute left-[78%] top-0 whitespace-nowrap font-sans text-[35vh] font-black leading-none text-[#d62828]"
                     style={{
-                      transform: "perspective(400px) rotateY(-25deg)",
+                      transform: "translate(-130px, 5px) perspective(400px) rotateY(-25deg)",
                       textShadow:
                         "1px 1px 0 #b01f1f, 2px 2px 0 #9e1b1b, 3px 3px 0 #8c1717, 4px 4px 0 #7a1313, 6px 8px 10px rgba(0,0,0,0.25)",
                       filter: "drop-shadow(0 1.5vh 1.2vh rgba(20,60,60,0.3))",
