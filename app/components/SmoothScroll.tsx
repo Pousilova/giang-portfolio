@@ -4,13 +4,16 @@ import { useEffect } from "react";
 import Lenis from "lenis";
 
 const WHEEL_MULTIPLIER = 0.75; // tốc độ lăn chuột: nhỏ hơn = chậm hơn (0.4 - 1.0)
+// Trên Mac (trackpad cuộn nhạy hơn chuột), cuộn chậm hơn 20%
+const MAC_WHEEL_FACTOR = 0.8;
 const DURATION = 1.4; // thời gian trượt sau mỗi lần lăn (giây), lớn hơn = êm và chậm hơn
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    const isMac = /Mac/.test(navigator.platform || navigator.userAgent) && navigator.maxTouchPoints <= 1;
     const lenis = new Lenis({
       duration: DURATION,
-      wheelMultiplier: WHEEL_MULTIPLIER,
+      wheelMultiplier: WHEEL_MULTIPLIER * (isMac ? MAC_WHEEL_FACTOR : 1),
       smoothWheel: true,
     });
 
