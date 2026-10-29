@@ -34,7 +34,7 @@ const MARKER_COLOR = "#d62828";
 // ROW_GAP là khoảng cách từ tâm khung đến tâm mỗi hàng, tính theo tỉ lệ chiều cao khung.
 const ROW_GAP = 0.18;
 // Tâm của cụm hai hàng trên desktop: hàng trên được kéo lên gần đường cong con ong, hàng dưới xuống thấp hơn
-const DESKTOP_ROW_CENTER = 0.42;
+const DESKTOP_ROW_CENTER = 0.5;
 // Độ nhích lên của hàng trên so với chiều cao khung (desktop)
 const TOP_ROW_LIFT = 0.02;
 // Độ hạ xuống của hàng dưới so với chiều cao khung (desktop)
@@ -101,7 +101,7 @@ const CRIT_COLOR: Record<Crit, string> = {
 const HEADLINE = "Nắm chắc luật chơi, để dễ dàng lụm điểm cao";
 const LEFT_HEAD = "Bốn tiêu chí chấm Speaking";
 const LEFT_BODY =
-  "FC, LR, GRA và Pronunciation. Kéo hàng tab phía trên để đi từ Basic đến Advanced. Tab nào chạm vào mũi tên đỏ sẽ hiện ghi chú chi tiết.";
+  "Nắm chắc các yêu cầu của kì thi IELTS ở bốn tiêu chí chấm điểm để đạt được band điểm Speaking mong muốn một cách dễ dàng hơn. Kéo các mục feature đến vị trí quét để hiện nội dung chi tiết hơn.";
 
 type Card = {
   level: number;
@@ -239,7 +239,7 @@ function layoutBelt(offset: number, W: number, H: number, mobile: boolean) {
   // Trên mobile chỉ còn hàng trên, nên đặt ngay giữa khung
   const rowDy = mobile ? 0 : ROW_GAP * H;
   // Trên desktop, hàng trên được nhích lên thêm một chút; hàng dưới giữ nguyên
-  const topY = py - rowDy - (mobile ? 0 : TOP_ROW_LIFT * H);
+  const topY = py - rowDy - (mobile ? 0 : TOP_ROW_LIFT * H) + (mobile ? 0 : 10);
   const bottomY = py + rowDy + (mobile ? 0 : BOTTOM_ROW_DROP * H);
 
   const placed: Placed[] = CARDS.map((_, k) => {
@@ -543,7 +543,7 @@ function NoteCard({ active, index }: { active: boolean; index: number }) {
   return (
     // Trên máy tính bảng các ghi chú xếp chồng trong cùng một ô lưới, khung cao bằng ghi chú dài nhất và không đổi khi đổi tab
     <div
-      className="relative h-auto w-full overflow-hidden rounded-2xl px-5 py-4 transition-colors duration-500 md:h-full md:px-[23px] md:py-[17.5px] md:max-lg:grid"
+      className="relative h-auto w-full overflow-hidden rounded-2xl px-5 py-4 transition-colors duration-500 md:h-[calc(100%+10px)] md:px-[23px] md:py-[17.5px] md:max-lg:grid"
       style={{ backgroundColor: bg }}
     >
       {/* Hình cầu bóng loáng ở góc phải, hình dạng khác nhau theo tiêu chí */}
@@ -661,7 +661,7 @@ function RandomBarcode({ seed }: { seed: number }) {
 function ScanLabel() {
   return (
     <span
-      className="block font-mono text-[13.824px] font-bold uppercase tracking-[0.524em] md:text-[0.857vw]"
+      className="block font-mono text-[13.824px] font-bold uppercase tracking-[0.524em] md:text-[0.857vw] min-[1024px]:text-[1.028vw]"
       style={{ writingMode: "vertical-rl", color: MARKER_COLOR }}
     >
       Scan here
@@ -995,16 +995,16 @@ export default function LearningSection() {
 
   return (
     <section id="learning" className="relative text-[#1a1a1a]" style={{ height: `${PIN_HEIGHT_VH}vh` }}>
-      <div className="sticky top-0 relative flex h-screen flex-col overflow-hidden bg-white py-8 md:py-[4vh]">
-        <div className="shrink-0 px-5 md:px-12">
+      <div className="sticky top-0 relative flex h-screen flex-col overflow-hidden bg-white py-8 md:pb-[4vh] md:pt-[9vh]">
+        <div className="shrink-0 px-5 md:px-12 lg:px-[7.5vw]">
           {/* Cố định chiều cao khối đầu để hai hàng thẻ không bị đẩy khi nội dung ghi chú thay đổi */}
-          <div className="grid gap-6 md:h-auto md:grid-cols-1 lg:h-[11.5rem] lg:grid-cols-2 lg:gap-12">
+          <div className="grid gap-6 md:h-auto md:grid-cols-1 lg:h-[13.2rem] lg:grid-cols-2 lg:gap-12">
             {/* Bên trái: tiêu đề và mô tả */}
             <div style={revealStyle(0)}>
-              <h2 className="font-serif text-[length:var(--fs-title)] italic leading-[1.25] tracking-tight md:leading-[1.3]">
+              <h2 className="font-serif text-[length:var(--fs-title)] font-bold italic leading-[1.25] lg:text-[30px] tracking-tight md:leading-[1.3]">
                 {HEADLINE}
               </h2>
-              <p className="mt-4 text-[length:var(--fs-subtitle)] font-medium leading-snug">{LEFT_HEAD}</p>
+              <p className="mt-4 text-[length:var(--fs-subtitle)] font-bold leading-snug">{LEFT_HEAD}</p>
               <p className="mt-2 max-w-xl text-[length:var(--fs-text)] leading-relaxed text-justify text-[#1a1a1a]">{LEFT_BODY}</p>
             </div>
 
@@ -1045,20 +1045,20 @@ export default function LearningSection() {
                     }}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#9a9a9a] md:text-[0.5vw] md:tracking-[0.2em]">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#9a9a9a] md:text-[0.5vw] min-[1024px]:text-[0.6vw] md:tracking-[0.2em]">
                         <span className="font-bold" style={{ color }}>
                           {cd.crit}
                         </span>{" "}
                         · <EaseStars ease={cd.ease} />
                       </p>
-                      <span className="font-mono text-[9px] text-[#9a9a9a] md:text-[0.55vw]">
+                      <span className="font-mono text-[9px] text-[#9a9a9a] md:text-[0.55vw] min-[1024px]:text-[0.66vw]">
                         {String(k + 1).padStart(2, "0")}
                       </span>
                     </div>
 
                     <div className="mt-1.5 flex flex-col md:mt-[0.6vw]">
-                      <h3 className="text-[12.5px] font-bold leading-snug md:text-[0.78vw]">{cd.title}</h3>
-                      <p className="mt-1 text-[10px] leading-snug text-[#1a1a1a]/65 md:mt-[0.5vw] md:text-[0.7vw]">{cd.body}</p>
+                      <h3 className="text-[12.5px] font-bold leading-snug md:text-[0.78vw] min-[1024px]:text-[0.936vw]">{cd.title}</h3>
+                      <p className="mt-1 text-[10px] leading-snug text-[#1a1a1a]/65 md:mt-[0.5vw] md:text-[0.7vw] min-[1024px]:text-[0.84vw]">{cd.body}</p>
                     </div>
 
                     <div className="mt-2 flex justify-end md:mt-[0.8vw]">

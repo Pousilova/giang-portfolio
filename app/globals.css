@@ -107,3 +107,20 @@ select {
     --fs-tag: 18px;
   }
 }
+
+/* Desktop (từ 1024px): các cỡ chữ lớn hơn 20% so với bản md */
+@media (min-width: 1024px) {
+  :root {
+    --fs-title: 34.8px;
+    --fs-subtitle: 16.2px;
+    --fs-card: 19.2px;
+    --fs-text: 16px;
+    --fs-tag: 10.8px;
+    --fs-h1: 72px;
+    --fs-h2: 57.6px;
+    --fs-h3: 24px;
+    --fs-body-lg: 21.6px;
+    --fs-body: 22px;
+    --fs-small: 16.8px;
+  }
+}
